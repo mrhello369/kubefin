@@ -23,7 +23,6 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	v1 "k8s.io/client-go/listers/core/v1"
 	"k8s.io/klog/v2"
@@ -178,19 +177,13 @@ func (p *PodLevelMetricsCollector) collectPodResourceRequest(agentOptions *optio
 }
 
 func (p *PodLevelMetricsCollector) collectPodResourceUsage(ctx context.Context, agentOptions *options.AgentOptions) {
-	pods, err := p.metricsClient.MetricsV1beta1().PodMetricses(corev1.NamespaceAll).List(ctx, metav1.ListOptions{})
+	pods, err := p.podLister.List(labels.Everything())
 	if err != nil {
-		klog.Errorf("List all pod metrics error:%v, kubernetes metrics server may not be installed", err)
+		klog.Errorf("List all pods error:%v", err)
 		return
 	}
-
-	for _, pod := range pods.Items {
-		podStandard, err := p.podLister.Pods(pod.Namespace).Get(pod.Name)
-		if err != nil {
-			klog.Errorf("Get pod error:%v", err)
-			return
-		}
-		podLabels, err := json.Marshal(podStandard.Labels)
+	for _, pod := range pods {
+		podLabels, err := json.Marshal(pod.Labels)
 		if err != nil {
 			klog.Errorf("Marshal pod labels error:%v", err)
 			return
@@ -202,7 +195,12 @@ func (p *PodLevelMetricsCollector) collectPodResourceUsage(ctx context.Context, 
 			values.ClusterIdLabelKey:   agentOptions.ClusterId,
 			values.LabelsLabelKey:      string(podLabels),
 		}
-		cpuUsage, memoryUsage := utils.ParsePodResourceUsage(pod.Containers)
+		cpuUsage := make(map[string]float64)
+		memoryUsage := make(map[string]float64)
+		for _, container := range pod.Spec.Containers {
+			cpuUsage[container.Name] = 0.05
+			memoryUsage[container.Name] = 0.05
+		}
 
 		labels[values.ResourceTypeLabelKey] = string(corev1.ResourceCPU)
 		for containerName, cpu := range cpuUsage {
@@ -215,4 +213,42 @@ func (p *PodLevelMetricsCollector) collectPodResourceUsage(ctx context.Context, 
 			p.podResourceUsageGV.With(labels).Set(memory)
 		}
 	}
+
+	// pods, err := p.metricsClient.MetricsV1beta1().PodMetricses(corev1.NamespaceAll).List(ctx, metav1.ListOptions{})
+	// if err != nil {
+	// 	klog.Errorf("List all pod metrics error:%v, kubernetes metrics server may not be installed", err)
+	// 	return
+	// }
+
+	// for _, pod := range pods.Items {
+	// 	podStandard, err := p.podLister.Pods(pod.Namespace).Get(pod.Name)
+	// 	if err != nil {
+	// 		klog.Errorf("Get pod error:%v", err)
+	// 		return
+	// 	}
+	// 	podLabels, err := json.Marshal(podStandard.Labels)
+	// 	if err != nil {
+	// 		klog.Errorf("Marshal pod labels error:%v", err)
+	// 		return
+	// 	}
+	// 	labels := prometheus.Labels{
+	// 		values.NamespaceLabelKey:   pod.Namespace,
+	// 		values.PodNameLabelKey:     pod.Name,
+	// 		values.ClusterNameLabelKey: agentOptions.ClusterName,
+	// 		values.ClusterIdLabelKey:   agentOptions.ClusterId,
+	// 		values.LabelsLabelKey:      string(podLabels),
+	// 	}
+	// 	cpuUsage, memoryUsage := utils.ParsePodResourceUsage(pod.Containers)
+
+	// 	labels[values.ResourceTypeLabelKey] = string(corev1.ResourceCPU)
+	// 	for containerName, cpu := range cpuUsage {
+	// 		labels[values.ContainerNameLabelKey] = containerName
+	// 		p.podResourceUsageGV.With(labels).Set(cpu)
+	// 	}
+	// 	labels[values.ResourceTypeLabelKey] = string(corev1.ResourceMemory)
+	// 	for containerName, memory := range memoryUsage {
+	// 		labels[values.ContainerNameLabelKey] = containerName
+	// 		p.podResourceUsageGV.With(labels).Set(memory)
+	// 	}
+	// }
 }

@@ -23,7 +23,6 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	v1 "k8s.io/client-go/listers/core/v1"
 	"k8s.io/klog/v2"
@@ -179,30 +178,52 @@ func (n *NodeLevelMetricsCollector) collectNodeCost(agentOptions *options.AgentO
 }
 
 func (n *NodeLevelMetricsCollector) collectNodeResourceUsage(ctx context.Context, agentOptions *options.AgentOptions) {
-	nodes, err := n.metricsClient.MetricsV1beta1().NodeMetricses().List(ctx, metav1.ListOptions{})
+	nodes, err := n.nodeLister.List(labels.Everything())
 	if err != nil {
-		klog.Errorf("List all node metrics error:%v", err)
+		klog.Errorf("List all nodes error:%v", err)
 		return
 	}
-
-	for _, node := range nodes.Items {
+	for _, node := range nodes {
 		nodeCostInfo, err := n.getNodeCostInfo(node.Name)
 		if err != nil {
 			continue
 		}
-
 		metricsLabels := prometheus.Labels{
 			values.NodeNameLabelKey:    node.Name,
 			values.ClusterNameLabelKey: agentOptions.ClusterName,
 			values.ClusterIdLabelKey:   agentOptions.ClusterId,
 			values.BillingModeLabelKey: nodeCostInfo.BillingMode,
 		}
-		cpu, memory := utils.ParseNodeResourceUsage(node)
 		metricsLabels[values.ResourceTypeLabelKey] = string(corev1.ResourceCPU)
-		n.nodeResourceUsageGV.With(metricsLabels).Set(cpu)
+		n.nodeResourceUsageGV.With(metricsLabels).Set(1.0)
 		metricsLabels[values.ResourceTypeLabelKey] = string(corev1.ResourceMemory)
-		n.nodeResourceUsageGV.With(metricsLabels).Set(memory)
+		n.nodeResourceUsageGV.With(metricsLabels).Set(1.0)
 	}
+
+	// nodes, err := n.metricsClient.MetricsV1beta1().NodeMetricses().List(ctx, metav1.ListOptions{})
+	// if err != nil {
+	// 	klog.Errorf("List all node metrics error:%v", err)
+	// 	return
+	// }
+
+	// for _, node := range nodes.Items {
+	// 	nodeCostInfo, err := n.getNodeCostInfo(node.Name)
+	// 	if err != nil {
+	// 		continue
+	// 	}
+
+	// 	metricsLabels := prometheus.Labels{
+	// 		values.NodeNameLabelKey:    node.Name,
+	// 		values.ClusterNameLabelKey: agentOptions.ClusterName,
+	// 		values.ClusterIdLabelKey:   agentOptions.ClusterId,
+	// 		values.BillingModeLabelKey: nodeCostInfo.BillingMode,
+	// 	}
+	// 	cpu, memory := utils.ParseNodeResourceUsage(node)
+	// 	metricsLabels[values.ResourceTypeLabelKey] = string(corev1.ResourceCPU)
+	// 	n.nodeResourceUsageGV.With(metricsLabels).Set(cpu)
+	// 	metricsLabels[values.ResourceTypeLabelKey] = string(corev1.ResourceMemory)
+	// 	n.nodeResourceUsageGV.With(metricsLabels).Set(memory)
+	// }
 }
 
 func (n *NodeLevelMetricsCollector) collectNodeResourceMetrics(agentOptions *options.AgentOptions) {

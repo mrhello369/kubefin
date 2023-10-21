@@ -216,39 +216,75 @@ func (w *WorkloadLevelMetricsCollector) collectDaemonSetRequestMetrics(ds *appsv
 }
 
 func (w *WorkloadLevelMetricsCollector) collectDaemonSetUsageMetrics(ds *appsv1.DaemonSet, agentOptions *options.AgentOptions, selector labels.Selector, labels prometheus.Labels) {
-	pods, err := w.metricsClient.MetricsV1beta1().PodMetricses(ds.Namespace).List(context.TODO(), metav1.ListOptions{})
+	selector, err := metav1.LabelSelectorAsSelector(ds.Spec.Selector)
 	if err != nil {
-		klog.Errorf("List all pod metrics error:%v, kubernetes metrics server may not be installed", err)
+		klog.Errorf("Parse deployment selector error:%v", err)
 		return
 	}
-	cpuTotalUsage, memoryTotalUsage := map[string]float64{}, map[string]float64{}
-	for _, pod := range pods.Items {
-		cpu, ram := utils.ParsePodResourceUsage(pod.Containers)
-		for containerName, value := range cpu {
-			if _, ok := cpuTotalUsage[containerName]; !ok {
-				cpuTotalUsage[containerName] = 0
+	pods, err := w.podLister.List(selector)
+	if err != nil {
+		klog.Errorf("List all pods error:%v", err)
+		return
+	}
+	for _, pod := range pods {
+		cpuTotalUsage, memoryTotalUsage := map[string]float64{}, map[string]float64{}
+		for _, container := range pod.Spec.Containers {
+			if _, ok := cpuTotalUsage[container.Name]; !ok {
+				cpuTotalUsage[container.Name] = 0
 			}
-			cpuTotalUsage[containerName] += value
+			if _, ok := memoryTotalUsage[container.Name]; !ok {
+				memoryTotalUsage[container.Name] = 0
+			}
+			cpuTotalUsage[container.Name] = 0.05
+			memoryTotalUsage[container.Name] += 0.05
 		}
-		for containerName, value := range ram {
-			if _, ok := memoryTotalUsage[containerName]; !ok {
-				memoryTotalUsage[containerName] = 0
-			}
-			memoryTotalUsage[containerName] += value
+
+		labels[values.ResourceTypeLabelKey] = string(corev1.ResourceCPU)
+		for containerName, cpu := range cpuTotalUsage {
+			labels[values.ContainerNameLabelKey] = containerName
+			w.workloadResourceUsageGV.With(labels).Set(cpu)
+		}
+
+		labels[values.ResourceTypeLabelKey] = string(corev1.ResourceMemory)
+		for containerName, ram := range memoryTotalUsage {
+			labels[values.ContainerNameLabelKey] = containerName
+			w.workloadResourceUsageGV.With(labels).Set(ram)
 		}
 	}
 
-	labels[values.ResourceTypeLabelKey] = string(corev1.ResourceCPU)
-	for containerName, cpu := range cpuTotalUsage {
-		labels[values.ContainerNameLabelKey] = containerName
-		w.workloadResourceUsageGV.With(labels).Set(cpu)
-	}
+	// pods, err := w.metricsClient.MetricsV1beta1().PodMetricses(ds.Namespace).List(context.TODO(), metav1.ListOptions{})
+	// if err != nil {
+	// 	klog.Errorf("List all pod metrics error:%v, kubernetes metrics server may not be installed", err)
+	// 	return
+	// }
+	// cpuTotalUsage, memoryTotalUsage := map[string]float64{}, map[string]float64{}
+	// for _, pod := range pods.Items {
+	// 	cpu, ram := utils.ParsePodResourceUsage(pod.Containers)
+	// 	for containerName, value := range cpu {
+	// 		if _, ok := cpuTotalUsage[containerName]; !ok {
+	// 			cpuTotalUsage[containerName] = 0
+	// 		}
+	// 		cpuTotalUsage[containerName] += value
+	// 	}
+	// 	for containerName, value := range ram {
+	// 		if _, ok := memoryTotalUsage[containerName]; !ok {
+	// 			memoryTotalUsage[containerName] = 0
+	// 		}
+	// 		memoryTotalUsage[containerName] += value
+	// 	}
+	// }
 
-	labels[values.ResourceTypeLabelKey] = string(corev1.ResourceMemory)
-	for containerName, ram := range memoryTotalUsage {
-		labels[values.ContainerNameLabelKey] = containerName
-		w.workloadResourceUsageGV.With(labels).Set(ram)
-	}
+	// labels[values.ResourceTypeLabelKey] = string(corev1.ResourceCPU)
+	// for containerName, cpu := range cpuTotalUsage {
+	// 	labels[values.ContainerNameLabelKey] = containerName
+	// 	w.workloadResourceUsageGV.With(labels).Set(cpu)
+	// }
+
+	// labels[values.ResourceTypeLabelKey] = string(corev1.ResourceMemory)
+	// for containerName, ram := range memoryTotalUsage {
+	// 	labels[values.ContainerNameLabelKey] = containerName
+	// 	w.workloadResourceUsageGV.With(labels).Set(ram)
+	// }
 }
 
 func (w *WorkloadLevelMetricsCollector) collectDaemonSetCostMetrics(ds *appsv1.DaemonSet, agentOptions *options.AgentOptions, selector labels.Selector, labels prometheus.Labels) {
@@ -358,39 +394,75 @@ func (w *WorkloadLevelMetricsCollector) collectStatefulSetRequestMetrics(sf *app
 }
 
 func (w *WorkloadLevelMetricsCollector) collectStatefulSetUsageMetrics(sf *appsv1.StatefulSet, agentOptions *options.AgentOptions, selector labels.Selector, labels prometheus.Labels) {
-	pods, err := w.metricsClient.MetricsV1beta1().PodMetricses(sf.Namespace).List(context.TODO(), metav1.ListOptions{})
+	selector, err := metav1.LabelSelectorAsSelector(sf.Spec.Selector)
 	if err != nil {
-		klog.Errorf("List all pod metrics error:%v, kubernetes metrics server may not be installed", err)
+		klog.Errorf("Parse deployment selector error:%v", err)
 		return
 	}
-	cpuTotalUsage, memoryTotalUsage := map[string]float64{}, map[string]float64{}
-	for _, pod := range pods.Items {
-		cpu, ram := utils.ParsePodResourceUsage(pod.Containers)
-		for containerName, value := range cpu {
-			if _, ok := cpuTotalUsage[containerName]; !ok {
-				cpuTotalUsage[containerName] = 0
+	pods, err := w.podLister.List(selector)
+	if err != nil {
+		klog.Errorf("List all pods error:%v", err)
+		return
+	}
+	for _, pod := range pods {
+		cpuTotalUsage, memoryTotalUsage := map[string]float64{}, map[string]float64{}
+		for _, container := range pod.Spec.Containers {
+			if _, ok := cpuTotalUsage[container.Name]; !ok {
+				cpuTotalUsage[container.Name] = 0
 			}
-			cpuTotalUsage[containerName] += value
+			if _, ok := memoryTotalUsage[container.Name]; !ok {
+				memoryTotalUsage[container.Name] = 0
+			}
+			cpuTotalUsage[container.Name] = 0.05
+			memoryTotalUsage[container.Name] += 0.05
 		}
-		for containerName, value := range ram {
-			if _, ok := memoryTotalUsage[containerName]; !ok {
-				memoryTotalUsage[containerName] = 0
-			}
-			memoryTotalUsage[containerName] += value
+
+		labels[values.ResourceTypeLabelKey] = string(corev1.ResourceCPU)
+		for containerName, cpu := range cpuTotalUsage {
+			labels[values.ContainerNameLabelKey] = containerName
+			w.workloadResourceUsageGV.With(labels).Set(cpu)
+		}
+
+		labels[values.ResourceTypeLabelKey] = string(corev1.ResourceMemory)
+		for containerName, ram := range memoryTotalUsage {
+			labels[values.ContainerNameLabelKey] = containerName
+			w.workloadResourceUsageGV.With(labels).Set(ram)
 		}
 	}
 
-	labels[values.ResourceTypeLabelKey] = string(corev1.ResourceCPU)
-	for containerName, cpu := range cpuTotalUsage {
-		labels[values.ContainerNameLabelKey] = containerName
-		w.workloadResourceUsageGV.With(labels).Set(cpu)
-	}
+	// pods, err := w.metricsClient.MetricsV1beta1().PodMetricses(sf.Namespace).List(context.TODO(), metav1.ListOptions{})
+	// if err != nil {
+	// 	klog.Errorf("List all pod metrics error:%v, kubernetes metrics server may not be installed", err)
+	// 	return
+	// }
+	// cpuTotalUsage, memoryTotalUsage := map[string]float64{}, map[string]float64{}
+	// for _, pod := range pods.Items {
+	// 	cpu, ram := utils.ParsePodResourceUsage(pod.Containers)
+	// 	for containerName, value := range cpu {
+	// 		if _, ok := cpuTotalUsage[containerName]; !ok {
+	// 			cpuTotalUsage[containerName] = 0
+	// 		}
+	// 		cpuTotalUsage[containerName] += value
+	// 	}
+	// 	for containerName, value := range ram {
+	// 		if _, ok := memoryTotalUsage[containerName]; !ok {
+	// 			memoryTotalUsage[containerName] = 0
+	// 		}
+	// 		memoryTotalUsage[containerName] += value
+	// 	}
+	// }
 
-	labels[values.ResourceTypeLabelKey] = string(corev1.ResourceMemory)
-	for containerName, ram := range memoryTotalUsage {
-		labels[values.ContainerNameLabelKey] = containerName
-		w.workloadResourceUsageGV.With(labels).Set(ram)
-	}
+	// labels[values.ResourceTypeLabelKey] = string(corev1.ResourceCPU)
+	// for containerName, cpu := range cpuTotalUsage {
+	// 	labels[values.ContainerNameLabelKey] = containerName
+	// 	w.workloadResourceUsageGV.With(labels).Set(cpu)
+	// }
+
+	// labels[values.ResourceTypeLabelKey] = string(corev1.ResourceMemory)
+	// for containerName, ram := range memoryTotalUsage {
+	// 	labels[values.ContainerNameLabelKey] = containerName
+	// 	w.workloadResourceUsageGV.With(labels).Set(ram)
+	// }
 }
 
 func (w *WorkloadLevelMetricsCollector) collectStatefulSetCostMetrics(sf *appsv1.StatefulSet, agentOptions *options.AgentOptions, selector labels.Selector, labels prometheus.Labels) {
@@ -496,39 +568,83 @@ func (w *WorkloadLevelMetricsCollector) collectDeploymentRequestMetrics(dm *apps
 }
 
 func (w *WorkloadLevelMetricsCollector) collectDeploymentUsageMetrics(dm *appsv1.Deployment, agentOptions *options.AgentOptions, selector labels.Selector, labels prometheus.Labels) {
-	pods, err := w.metricsClient.MetricsV1beta1().PodMetricses(dm.Namespace).List(context.TODO(), metav1.ListOptions{})
+	selector, err := metav1.LabelSelectorAsSelector(dm.Spec.Selector)
 	if err != nil {
-		klog.Errorf("List all pod metrics error:%v, kubernetes metrics server may not be installed", err)
+		klog.Errorf("Parse deployment selector error:%v", err)
 		return
 	}
-	cpuTotalUsage, memoryTotalUsage := map[string]float64{}, map[string]float64{}
-	for _, pod := range pods.Items {
-		cpu, ram := utils.ParsePodResourceUsage(pod.Containers)
-		for containerName, value := range cpu {
-			if _, ok := cpuTotalUsage[containerName]; !ok {
-				cpuTotalUsage[containerName] = 0
+	pods, err := w.podLister.List(selector)
+	if err != nil {
+		klog.Errorf("List all pods error:%v", err)
+		return
+	}
+	for _, pod := range pods {
+		cpuTotalUsage, memoryTotalUsage := map[string]float64{}, map[string]float64{}
+		for _, container := range pod.Spec.Containers {
+			if _, ok := cpuTotalUsage[container.Name]; !ok {
+				cpuTotalUsage[container.Name] = 0
 			}
-			cpuTotalUsage[containerName] += value
+			if _, ok := memoryTotalUsage[container.Name]; !ok {
+				memoryTotalUsage[container.Name] = 0
+			}
+			cpuTotalUsage[container.Name] = 0.05
+			memoryTotalUsage[container.Name] += 0.05
 		}
-		for containerName, value := range ram {
-			if _, ok := memoryTotalUsage[containerName]; !ok {
-				memoryTotalUsage[containerName] = 0
-			}
-			memoryTotalUsage[containerName] += value
+
+		labels[values.ResourceTypeLabelKey] = string(corev1.ResourceCPU)
+		for containerName, cpu := range cpuTotalUsage {
+			labels[values.ContainerNameLabelKey] = containerName
+			w.workloadResourceUsageGV.With(labels).Set(cpu)
+		}
+
+		labels[values.ResourceTypeLabelKey] = string(corev1.ResourceMemory)
+		for containerName, ram := range memoryTotalUsage {
+			labels[values.ContainerNameLabelKey] = containerName
+			w.workloadResourceUsageGV.With(labels).Set(ram)
 		}
 	}
 
-	labels[values.ResourceTypeLabelKey] = string(corev1.ResourceCPU)
-	for containerName, cpu := range cpuTotalUsage {
-		labels[values.ContainerNameLabelKey] = containerName
-		w.workloadResourceUsageGV.With(labels).Set(cpu)
-	}
+	// // TODO: There is a bug, list with label selector
+	// selector, err := metav1.LabelSelectorAsSelector(dm.Spec.Selector)
+	// if err != nil {
+	// 	klog.Errorf("Parse deployment selector error:%v", err)
+	// 	return
+	// }
+	// pods, err := w.metricsClient.MetricsV1beta1().PodMetricses(dm.Namespace).List(context.TODO(), metav1.ListOptions{
+	// 	LabelSelector: selector.String(),
+	// })
+	// if err != nil {
+	// 	klog.Errorf("List all pod metrics error:%v, kubernetes metrics server may not be installed", err)
+	// 	return
+	// }
+	// cpuTotalUsage, memoryTotalUsage := map[string]float64{}, map[string]float64{}
+	// for _, pod := range pods.Items {
+	// 	cpu, ram := utils.ParsePodResourceUsage(pod.Containers)
+	// 	for containerName, value := range cpu {
+	// 		if _, ok := cpuTotalUsage[containerName]; !ok {
+	// 			cpuTotalUsage[containerName] = 0
+	// 		}
+	// 		cpuTotalUsage[containerName] += value
+	// 	}
+	// 	for containerName, value := range ram {
+	// 		if _, ok := memoryTotalUsage[containerName]; !ok {
+	// 			memoryTotalUsage[containerName] = 0
+	// 		}
+	// 		memoryTotalUsage[containerName] += value
+	// 	}
+	// }
 
-	labels[values.ResourceTypeLabelKey] = string(corev1.ResourceMemory)
-	for containerName, ram := range memoryTotalUsage {
-		labels[values.ContainerNameLabelKey] = containerName
-		w.workloadResourceUsageGV.With(labels).Set(ram)
-	}
+	// labels[values.ResourceTypeLabelKey] = string(corev1.ResourceCPU)
+	// for containerName, cpu := range cpuTotalUsage {
+	// 	labels[values.ContainerNameLabelKey] = containerName
+	// 	w.workloadResourceUsageGV.With(labels).Set(cpu)
+	// }
+
+	// labels[values.ResourceTypeLabelKey] = string(corev1.ResourceMemory)
+	// for containerName, ram := range memoryTotalUsage {
+	// 	labels[values.ContainerNameLabelKey] = containerName
+	// 	w.workloadResourceUsageGV.With(labels).Set(ram)
+	// }
 }
 
 func (w *WorkloadLevelMetricsCollector) collectDeploymentCostMetrics(dm *appsv1.Deployment, agentOptions *options.AgentOptions, selector labels.Selector, labels prometheus.Labels) {
