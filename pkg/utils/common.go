@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/model"
 	"k8s.io/apimachinery/pkg/api/resource"
 
@@ -113,4 +114,12 @@ func ConvertQualityToGiB(value resource.Quantity) float64 {
 
 func ConvertQualityToCore(value resource.Quantity) float64 {
 	return value.AsApproximateFloat64()
+}
+
+func ConvertPrometheusLabelValuesInOrder(keyOrder []string, labels prometheus.Labels) []string {
+	ret := []string{}
+	for _, key := range keyOrder {
+		ret = append(ret, labels[key])
+	}
+	return ret
 }

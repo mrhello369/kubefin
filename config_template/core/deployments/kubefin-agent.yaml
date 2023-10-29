@@ -42,7 +42,7 @@ spec:
         # and substituted here.
         image: {KUBEFIN_AGENT_IAMGE}
         args:
-          - --v=6 # highest log level
+          - --v=4 # debug level log
         resources:
           requests:
             cpu: 500m

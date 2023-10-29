@@ -98,6 +98,9 @@ func Run(ctx context.Context, opts *options.AgentOptions) error {
 	if err != nil {
 		return fmt.Errorf("create cloud provider error:%v", err)
 	}
+	if err := provider.ParseClusterInfo(opts); err != nil {
+		return err
+	}
 
 	factory := informers.NewSharedInformerFactory(clientSet, 0)
 	coreResourceInformerLister := getAllCoreResourceLister(factory)
@@ -112,10 +115,6 @@ func Run(ctx context.Context, opts *options.AgentOptions) error {
 		coreResourceInformerLister.NodeInformer.HasSynced,
 		coreResourceInformerLister.PodInformer.HasSynced); !ok {
 		return fmt.Errorf("wait core resource cache sync failed")
-	}
-
-	if err := provider.ParseClusterInfo(opts); err != nil {
-		return err
 	}
 
 	klog.Infof("Start metrics http server")
