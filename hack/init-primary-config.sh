@@ -23,8 +23,8 @@ source "${EXE_ROOT}"/utils.sh
 
 function usage() {
   echo "This script will deploy KubeFin components on primary cluster"
-  echo "Usage: hack/install-kubefin-primary.sh <CLUSTER_PROVIDER> <CLUSTER_NAME> <MULTI_CLUSTER_ENABLE> <KUBEFIN_VERSION>"
-  echo "Example: hack/install-kubefin-primary.sh default kubefin-server true latest"
+  echo "Usage: hack/init-primary-config.sh <CLUSTER_PROVIDER> <CLUSTER_NAME> <MULTI_CLUSTER_ENABLE> <KUBEFIN_VERSION>"
+  echo "Example: hack/init-primary-config.sh default kubefin-server true latest"
 }
 
 if [[ $# -ne 4 ]]; then

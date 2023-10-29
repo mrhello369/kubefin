@@ -22,9 +22,9 @@ EXE_ROOT=$(dirname "${BASH_SOURCE[0]}")
 source "${EXE_ROOT}"/utils.sh
 
 function usage() {
-  echo "This script will deploy KubeFin components on primary cluster"
-  echo "Usage: hack/install-kubefin-primary.sh <CLUSTER_PROVIDER> <CLUSTER_NAME> <METRICS_WRITE_ADDRESS>"
-  echo "Example: hack/install-kubefin-primary.sh default kubefin-server"
+  echo "This script will deploy KubeFin components on second cluster"
+  echo "Usage: hack/init-secondary-config.sh <CLUSTER_PROVIDER> <CLUSTER_NAME> <METRICS_WRITE_ADDRESS>"
+  echo "Example: hack/init-secondary-config.sh default cluster-1 http://127.0.0.1:2345/api/v1/push"
 }
 
 if [[ $# -ne 3 ]]; then
