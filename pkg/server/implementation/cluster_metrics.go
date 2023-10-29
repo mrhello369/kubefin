@@ -696,6 +696,10 @@ func queryAllClustersResourceSystemTaken(tenantId string) (map[string]map[string
 
 func ConvertToMultiClustersMetricsList(clusterMetrics map[string]*api.ClusterMetricsSummary, clustersProperty map[string]*api.ClusterBasicProperty) *api.ClusterMetricsSummaryList {
 	for cluterId := range clusterMetrics {
+		if _, ok := clustersProperty[cluterId]; !ok {
+			klog.Warningf("Cluster basic information is not found:%s, ignore it", cluterId)
+			continue
+		}
 		clusterMetrics[cluterId].ClusterBasicProperty = *clustersProperty[cluterId]
 	}
 

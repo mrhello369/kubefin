@@ -103,7 +103,7 @@ export function ClusterCostHeader(props) {
     let endDateInt = Math.floor(endDate);
     let stepSeconds = 3600;
     // if the start time is less 24 hours before the end time, the step time shoud be days
-    if (endDateInt - startDateInt >= 86400) {
+    if (endDateInt - startDateInt > 86400) {
       stepSeconds = 86400;
     }
     fetchClusterData(startDateInt, endDateInt, stepSeconds);

@@ -67,9 +67,7 @@ func QueryWorkloadCostsWithTimeRange(tenantId, clusterId string,
 		go func() {
 			defer wg.Done()
 			podCosts, err = queryPodCostsWithTimeRange(tenantId, clusterId, start, end, stepSeconds)
-			if err != nil {
-				errs = append(errs, err)
-			}
+			errs = append(errs, err)
 		}()
 	}
 
@@ -79,14 +77,12 @@ func QueryWorkloadCostsWithTimeRange(tenantId, clusterId string,
 		go func() {
 			defer wg.Done()
 			workloadCosts, err = queryHighLevelWorkloadCostsWithTimeRange(tenantId, clusterId, start, end, stepSeconds, aggregateBy)
-			if err != nil {
-				errs = append(errs, err)
-			}
+			errs = append(errs, err)
 		}()
 	}
 
 	wg.Wait()
-	if len(errs) > 0 {
+	if errors.NewAggregate(errs) != nil {
 		return nil, errors.NewAggregate(errs)
 	}
 

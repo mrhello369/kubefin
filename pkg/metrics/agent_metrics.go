@@ -34,7 +34,6 @@ type AgentMetricsCollector struct {
 	interval                      time.Duration
 	clusterMetricsCollector       *core.ClusterLevelMetricsCollector
 	nodeLevelMetricsCollector     *core.NodeLevelMetricsCollector
-	podLevelMetricsCollector      *core.PodLevelMetricsCollector
 	workloadLevelMetricsCollector *core.WorkloadLevelMetricsCollector
 }
 
@@ -43,16 +42,14 @@ func NewAgentMetricsCollector(ctx context.Context,
 	coreResourceInformerLister *api.CoreResourceInformerLister,
 	provider cloudprice.CloudProviderInterface,
 	metricsClientSet *versioned.Clientset) *AgentMetricsCollector {
+	core.RegisterPodLevelMetricsCollection(options, metricsClientSet, provider,
+		coreResourceInformerLister.PodLister, coreResourceInformerLister.NodeLister)
 	return &AgentMetricsCollector{
 		ctx:                       ctx,
 		agentOptions:              options,
 		interval:                  options.ScrapMetricsInterval,
 		clusterMetricsCollector:   core.NewClusterLevelMetricsCollector(provider, coreResourceInformerLister.NodeLister),
 		nodeLevelMetricsCollector: core.NewNodeLevelMetricsCollector(metricsClientSet, provider, coreResourceInformerLister),
-		podLevelMetricsCollector: core.NewPodLevelMetricsCollector(
-			metricsClientSet, provider,
-			coreResourceInformerLister.PodLister,
-			coreResourceInformerLister.NodeLister),
 		workloadLevelMetricsCollector: core.NewWorkloadLevelMetricsCollector(
 			metricsClientSet, provider,
 			coreResourceInformerLister.PodLister,
@@ -65,7 +62,6 @@ func NewAgentMetricsCollector(ctx context.Context,
 
 func (a *AgentMetricsCollector) StartAgentMetricsCollector() {
 	go a.nodeLevelMetricsCollector.StartCollectNodeLevelMetrics(a.ctx, a.interval, a.agentOptions)
-	go a.podLevelMetricsCollector.StartCollectPodLevelMetrics(a.ctx, a.interval, a.agentOptions)
 	go a.workloadLevelMetricsCollector.StartCollectWorkloadLevelMetrics(a.ctx, a.interval, a.agentOptions)
 	go a.clusterMetricsCollector.StartCollectClusterLevelMetrics(a.ctx, a.interval, a.agentOptions)
 }
