@@ -90,54 +90,62 @@ func Run(ctx context.Context, opts *options.AgentOptions) error {
 		return fmt.Errorf("create client to connect kube-apiserver error:%v", err)
 	}
 
-	metricsClientSet, err := metricsv.NewForConfig(config)
-	if err != nil {
-		return fmt.Errorf("create metrics client to connect kube-apiserver error:%v", err)
+	server := &http.Server{
+		Addr: ":8080",
 	}
-	provider, err := cloudprice.NewCloudProvider(clientSet, opts)
-	if err != nil {
-		return fmt.Errorf("create cloud provider error:%v", err)
-	}
-	if err := provider.ParseClusterInfo(opts); err != nil {
-		return err
-	}
-
-	factory := informers.NewSharedInformerFactory(clientSet, 0)
-	coreResourceInformerLister := getAllCoreResourceLister(factory)
-	metricsCollector := metrics.NewAgentMetricsCollector(ctx, opts, coreResourceInformerLister, provider, metricsClientSet)
-
-	stopCh := ctx.Done()
-	factory.Start(stopCh)
-
-	klog.Infof("Wait node cache sync...")
-	if ok := cache.WaitForCacheSync(stopCh,
-		coreResourceInformerLister.NamespaceInformer.HasSynced,
-		coreResourceInformerLister.NodeInformer.HasSynced,
-		coreResourceInformerLister.PodInformer.HasSynced); !ok {
-		return fmt.Errorf("wait core resource cache sync failed")
-	}
-
-	klog.Infof("Start metrics http server")
-	http.Handle("/metrics", promhttp.Handler())
-	go func() {
-		if err := http.ListenAndServe(":8080", nil); err != nil {
-			klog.Fatalf("Start http server error:%v", err)
-		}
-	}()
-
 	runFunc := func(runCtx context.Context) {
-		metricsCollector.StartAgentMetricsCollector()
+		// TODO: Support pull metrics from API, and ensure the requests will go to the right pod
+		metricsClientSet, err := metricsv.NewForConfig(config)
+		if err != nil {
+			klog.Fatalf("create metrics client to connect kube-apiserver error:%v", err)
+		}
+		provider, err := cloudprice.NewCloudProvider(clientSet, opts)
+		if err != nil {
+			klog.Fatalf("Create cloud provider error:%v", err)
+		}
+		if err := provider.ParseClusterInfo(opts); err != nil {
+			klog.Fatalf("Parse cluster info error:%v", err)
+		}
+
+		factory := informers.NewSharedInformerFactory(clientSet, 0)
+		coreResourceInformerLister := getAllCoreResourceLister(factory)
+		metrics.RegisterAgentMetricsCollector(ctx, opts, coreResourceInformerLister, provider, metricsClientSet)
+
+		stopCh := ctx.Done()
+		factory.Start(stopCh)
+
+		klog.Infof("Wait node cache sync...")
+		if ok := cache.WaitForCacheSync(stopCh,
+			coreResourceInformerLister.NamespaceInformer.HasSynced,
+			coreResourceInformerLister.NodeInformer.HasSynced,
+			coreResourceInformerLister.PodInformer.HasSynced); !ok {
+			klog.Fatalf("wait core resource cache sync failed")
+		}
+
+		mux := http.NewServeMux()
+		mux.Handle("/metrics", promhttp.Handler())
+		server.Handler = mux
+		klog.Infof("Start metrics http server")
+		go func() {
+			if err := server.ListenAndServe(); err != nil {
+				klog.Fatalf("Start http server error:%v", err)
+			}
+		}()
 	}
-	if err := runLeaderElection(ctx, clientSet, opts, runFunc); err != nil {
+	stopFun := func() {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+		defer cancel()
+		server.Shutdown(ctx)
+	}
+	if err := runLeaderElection(ctx, clientSet, opts, runFunc, stopFun); err != nil {
 		return fmt.Errorf("run leader election error:%v", err)
 	}
 
-	<-stopCh
 	return nil
 }
 
 func runLeaderElection(ctx context.Context, clientset kubernetes.Interface,
-	opts *options.AgentOptions, runFunc func(ctx context.Context)) error {
+	opts *options.AgentOptions, runFunc func(ctx context.Context), stopFunc func()) error {
 	rl, err := resourcelock.New(opts.LeaderElection.ResourceLock,
 		opts.LeaderElection.ResourceNamespace,
 		opts.LeaderElection.ResourceName,
@@ -157,9 +165,7 @@ func runLeaderElection(ctx context.Context, clientset kubernetes.Interface,
 	}
 	leaderElectionCfg.Callbacks = leaderelection.LeaderCallbacks{
 		OnStartedLeading: runFunc,
-		OnStoppedLeading: func() {
-			klog.Infof("Leader election lost")
-		},
+		OnStoppedLeading: stopFunc,
 	}
 	leaderElector, err := leaderelection.NewLeaderElector(leaderElectionCfg)
 	if err != nil {

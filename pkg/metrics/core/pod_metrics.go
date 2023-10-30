@@ -29,6 +29,7 @@ import (
 	"k8s.io/metrics/pkg/client/clientset/versioned"
 
 	"github.com/kubefin/kubefin/cmd/kubefin-agent/app/options"
+	"github.com/kubefin/kubefin/pkg/api"
 	"github.com/kubefin/kubefin/pkg/cloudprice"
 	"github.com/kubefin/kubefin/pkg/utils"
 	"github.com/kubefin/kubefin/pkg/values"
@@ -69,7 +70,7 @@ var (
 		containerCareLabelKey, nil)
 )
 
-type podResourceCostCollector struct {
+type podMetricsCollector struct {
 	clusterId   string
 	clusterName string
 
@@ -80,11 +81,13 @@ type podResourceCostCollector struct {
 	nodeLister v1.NodeLister
 }
 
-func (p *podResourceCostCollector) Describe(ch chan<- *prometheus.Desc) {
+func (p *podMetricsCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- podResourceCostDesc
+	ch <- podResourceRequestDesc
+	ch <- podResourceUsageDesc
 }
 
-func (p *podResourceCostCollector) Collect(ch chan<- prometheus.Metric) {
+func (p *podMetricsCollector) Collect(ch chan<- prometheus.Metric) {
 	pods, err := p.podLister.List(labels.Everything())
 	if err != nil {
 		klog.Errorf("List all pods error:%v", err)
@@ -102,7 +105,7 @@ func (p *podResourceCostCollector) Collect(ch chan<- prometheus.Metric) {
 			cost = utils.ParsePodResourceCost(pod, p.provider, p.nodeLister)
 			scheduled = "true"
 		}
-		labels := prometheus.Labels{
+		crCareLabels := prometheus.Labels{
 			values.NamespaceLabelKey:    pod.Namespace,
 			values.PodNameLabelKey:      pod.Name,
 			values.ClusterNameLabelKey:  p.clusterName,
@@ -112,38 +115,9 @@ func (p *podResourceCostCollector) Collect(ch chan<- prometheus.Metric) {
 			values.ResourceTypeLabelKey: "cost",
 		}
 		ch <- prometheus.MustNewConstMetric(podResourceCostDesc,
-			prometheus.GaugeValue, cost, utils.ConvertPrometheusLabelValuesInOrder(containerNoneCareLabelKey, labels)...)
-	}
-}
+			prometheus.GaugeValue, cost, utils.ConvertPrometheusLabelValuesInOrder(containerNoneCareLabelKey, crCareLabels)...)
 
-type podResourceRequestCollector struct {
-	clusterId   string
-	clusterName string
-
-	metricsClient *versioned.Clientset
-	provider      cloudprice.CloudProviderInterface
-
-	podLister  v1.PodLister
-	nodeLister v1.NodeLister
-}
-
-func (p *podResourceRequestCollector) Describe(ch chan<- *prometheus.Desc) {
-	ch <- podResourceRequestDesc
-}
-
-func (p *podResourceRequestCollector) Collect(ch chan<- prometheus.Metric) {
-	pods, err := p.podLister.List(labels.Everything())
-	if err != nil {
-		klog.Errorf("List all pods error:%v", err)
-		return
-	}
-	for _, pod := range pods {
-		podLabels, err := json.Marshal(pod.Labels)
-		if err != nil {
-			klog.Errorf("Marshal pod labels error:%v", err)
-			return
-		}
-		labels := prometheus.Labels{
+		crNoneCareLabels := prometheus.Labels{
 			values.NamespaceLabelKey:   pod.Namespace,
 			values.PodNameLabelKey:     pod.Name,
 			values.ClusterNameLabelKey: p.clusterName,
@@ -152,38 +126,25 @@ func (p *podResourceRequestCollector) Collect(ch chan<- prometheus.Metric) {
 		}
 		cpuRequest, memoryRequest := utils.ParsePodResourceRequest(pod.Spec.Containers)
 
-		labels[values.ResourceTypeLabelKey] = string(corev1.ResourceCPU)
+		crNoneCareLabels[values.ResourceTypeLabelKey] = string(corev1.ResourceCPU)
 		for containerName, cpu := range cpuRequest {
-			labels[values.ContainerNameLabelKey] = containerName
+			crNoneCareLabels[values.ContainerNameLabelKey] = containerName
 			ch <- prometheus.MustNewConstMetric(podResourceRequestDesc,
-				prometheus.GaugeValue, cpu, utils.ConvertPrometheusLabelValuesInOrder(containerCareLabelKey, labels)...)
+				prometheus.GaugeValue, cpu, utils.ConvertPrometheusLabelValuesInOrder(containerCareLabelKey, crNoneCareLabels)...)
 		}
-		labels[values.ResourceTypeLabelKey] = string(corev1.ResourceMemory)
+		crNoneCareLabels[values.ResourceTypeLabelKey] = string(corev1.ResourceMemory)
 		for containerName, memory := range memoryRequest {
-			labels[values.ContainerNameLabelKey] = containerName
+			crNoneCareLabels[values.ContainerNameLabelKey] = containerName
 			ch <- prometheus.MustNewConstMetric(podResourceRequestDesc,
-				prometheus.GaugeValue, memory, utils.ConvertPrometheusLabelValuesInOrder(containerCareLabelKey, labels)...)
+				prometheus.GaugeValue, memory, utils.ConvertPrometheusLabelValuesInOrder(containerCareLabelKey, crNoneCareLabels)...)
 		}
 	}
+	p.CollectPodResourceUsage(ch)
 }
 
-type podResourceUsageCollector struct {
-	clusterId   string
-	clusterName string
-
-	metricsClient *versioned.Clientset
-	provider      cloudprice.CloudProviderInterface
-
-	podLister  v1.PodLister
-	nodeLister v1.NodeLister
-}
-
-func (p *podResourceUsageCollector) Describe(ch chan<- *prometheus.Desc) {
-	ch <- podResourceUsageDesc
-}
-
-func (p *podResourceUsageCollector) Collect(ch chan<- prometheus.Metric) {
-	pods, err := p.metricsClient.MetricsV1beta1().PodMetricses(corev1.NamespaceAll).List(context.Background(), metav1.ListOptions{})
+func (p *podMetricsCollector) CollectPodResourceUsage(ch chan<- prometheus.Metric) {
+	pods, err := p.metricsClient.MetricsV1beta1().PodMetricses(corev1.NamespaceAll).
+		List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		klog.Errorf("List all pod metrics error:%v, kubernetes metrics server may not be installed", err)
 		return
@@ -227,32 +188,15 @@ func (p *podResourceUsageCollector) Collect(ch chan<- prometheus.Metric) {
 func RegisterPodLevelMetricsCollection(agentOptions *options.AgentOptions,
 	client *versioned.Clientset,
 	provider cloudprice.CloudProviderInterface,
-	podLister v1.PodLister,
-	nodeLister v1.NodeLister) {
-	podResourceCostCollector := &podResourceCostCollector{
+	coreResourceInformerLister *api.CoreResourceInformerLister) {
+	podMetricsCollector := &podMetricsCollector{
 		clusterId:     agentOptions.ClusterId,
 		clusterName:   agentOptions.ClusterName,
 		metricsClient: client,
 		provider:      provider,
-		podLister:     podLister,
-		nodeLister:    nodeLister,
-	}
-	podResourceRequestCollector := &podResourceRequestCollector{
-		clusterId:     agentOptions.ClusterId,
-		clusterName:   agentOptions.ClusterName,
-		metricsClient: client,
-		provider:      provider,
-		podLister:     podLister,
-		nodeLister:    nodeLister,
-	}
-	podResuorceUsageCollector := &podResourceUsageCollector{
-		clusterId:     agentOptions.ClusterId,
-		clusterName:   agentOptions.ClusterName,
-		metricsClient: client,
-		provider:      provider,
-		podLister:     podLister,
-		nodeLister:    nodeLister,
+		podLister:     coreResourceInformerLister.PodLister,
+		nodeLister:    coreResourceInformerLister.NodeLister,
 	}
 
-	prometheus.MustRegister(podResourceCostCollector, podResourceRequestCollector, podResuorceUsageCollector)
+	prometheus.MustRegister(podMetricsCollector)
 }

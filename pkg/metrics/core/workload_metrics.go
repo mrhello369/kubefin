@@ -19,7 +19,6 @@ package core
 import (
 	"context"
 	"encoding/json"
-	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	appsv1 "k8s.io/api/apps/v1"
@@ -32,32 +31,14 @@ import (
 	"k8s.io/metrics/pkg/client/clientset/versioned"
 
 	"github.com/kubefin/kubefin/cmd/kubefin-agent/app/options"
+	"github.com/kubefin/kubefin/pkg/api"
 	"github.com/kubefin/kubefin/pkg/cloudprice"
 	"github.com/kubefin/kubefin/pkg/utils"
 	"github.com/kubefin/kubefin/pkg/values"
 )
 
-// WorkloadLevelMetricsCollector collects metrics about deployment/statefulset/daemonset
-type WorkloadLevelMetricsCollector struct {
-	metricsClient *versioned.Clientset
-	provider      cloudprice.CloudProviderInterface
-
-	podLister         listercorev1.PodLister
-	nodeLister        listercorev1.NodeLister
-	daemonSetLister   listersappv1.DaemonSetLister
-	deploymentLister  listersappv1.DeploymentLister
-	statefulSetLister listersappv1.StatefulSetLister
-
-	workloadResourceCostGV    *prometheus.GaugeVec
-	workloadPodCountGV        *prometheus.GaugeVec
-	workloadResourceRequestGV *prometheus.GaugeVec
-	workloadResourceUsageGV   *prometheus.GaugeVec
-}
-
-func NewWorkloadLevelMetricsCollector(client *versioned.Clientset, provider cloudprice.CloudProviderInterface,
-	podLister listercorev1.PodLister, nodeLister listercorev1.NodeLister, daemonSetLister listersappv1.DaemonSetLister,
-	deploymentLister listersappv1.DeploymentLister, statefulSetLister listersappv1.StatefulSetLister) *WorkloadLevelMetricsCollector {
-	containerNoneCareLabelKey := []string{
+var (
+	workloadCRNoneCareLabelKey = []string{
 		values.WorkloadTypeLabelKey,
 		values.WorkloadNameLabelKey,
 		values.NamespaceLabelKey,
@@ -66,14 +47,14 @@ func NewWorkloadLevelMetricsCollector(client *versioned.Clientset, provider clou
 		values.LabelsLabelKey,
 		values.ResourceTypeLabelKey,
 	}
-	workloadResourceCostGV := prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: values.WorkloadResourceCostMetricsName,
-		Help: "The workload resource cost"}, containerNoneCareLabelKey)
-	workloadPodCountGV := prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: values.WorkloadPodCountMetricsName,
-		Help: "The workload pod count"}, containerNoneCareLabelKey)
+	workloadResourceCostDesc = prometheus.NewDesc(
+		values.WorkloadResourceCostMetricsName,
+		"The workload resource cost", workloadCRNoneCareLabelKey, nil)
+	workloadPodCountDesc = prometheus.NewDesc(
+		values.WorkloadPodCountMetricsName,
+		"The workload pod count", workloadCRNoneCareLabelKey, nil)
 
-	containerCareLabelKey := []string{
+	workloadCRCareLabelKey = []string{
 		values.WorkloadTypeLabelKey,
 		values.WorkloadNameLabelKey,
 		values.NamespaceLabelKey,
@@ -84,51 +65,42 @@ func NewWorkloadLevelMetricsCollector(client *versioned.Clientset, provider clou
 		// For multiple container workload, this metrics is needed for cpu/memory size recommendation
 		values.ContainerNameLabelKey,
 	}
-	workloadResourceRequestGV := prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: values.WorkloadResourceRequestMetricsName,
-		Help: "The workload resource request",
-	}, containerCareLabelKey)
-	workloadResourceUsageGV := prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: values.WorkloadResourceUsageMetricsName,
-		Help: "The workload resource usage",
-	}, containerCareLabelKey)
+	workloadResourceRequestDesc = prometheus.NewDesc(
+		values.WorkloadResourceRequestMetricsName,
+		"The workload resource request", workloadCRCareLabelKey, nil)
+	workloadResourceUsageDesc = prometheus.NewDesc(
+		values.WorkloadResourceUsageMetricsName,
+		"The workload resource usage", workloadCRCareLabelKey, nil)
+)
 
-	prometheus.MustRegister(workloadResourceCostGV, workloadResourceRequestGV, workloadResourceUsageGV, workloadPodCountGV)
-	return &WorkloadLevelMetricsCollector{
-		metricsClient:             client,
-		provider:                  provider,
-		podLister:                 podLister,
-		nodeLister:                nodeLister,
-		daemonSetLister:           daemonSetLister,
-		deploymentLister:          deploymentLister,
-		statefulSetLister:         statefulSetLister,
-		workloadResourceCostGV:    workloadResourceCostGV,
-		workloadResourceRequestGV: workloadResourceRequestGV,
-		workloadResourceUsageGV:   workloadResourceUsageGV,
-		workloadPodCountGV:        workloadPodCountGV,
-	}
+type workloadMetricsCollector struct {
+	clusterName string
+	clusterId   string
+
+	metricsClient *versioned.Clientset
+	provider      cloudprice.CloudProviderInterface
+
+	podLister         listercorev1.PodLister
+	nodeLister        listercorev1.NodeLister
+	daemonSetLister   listersappv1.DaemonSetLister
+	statefulSetLister listersappv1.StatefulSetLister
+	deploymentLister  listersappv1.DeploymentLister
 }
 
-func (w *WorkloadLevelMetricsCollector) StartCollectWorkloadLevelMetrics(ctx context.Context,
-	interval time.Duration, agentOptions *options.AgentOptions) {
-	ticker := time.NewTicker(interval)
-
-	klog.Infof("Start collecting workload level metrics")
-	stopCh := ctx.Done()
-	for {
-		select {
-		case <-stopCh:
-			klog.Infof("Stop collecting DaemonSet level metrics")
-			return
-		case <-ticker.C:
-			w.collectDaemonSetResourceMetrics(agentOptions)
-			w.collectStatefulSetResourceMetrics(agentOptions)
-			w.collectDeploymentResourceMetrics(agentOptions)
-		}
-	}
+func (w *workloadMetricsCollector) Describe(ch chan<- *prometheus.Desc) {
+	ch <- workloadResourceCostDesc
+	ch <- workloadPodCountDesc
+	ch <- workloadResourceRequestDesc
+	ch <- workloadResourceUsageDesc
 }
 
-func (w *WorkloadLevelMetricsCollector) collectDaemonSetResourceMetrics(agentOptions *options.AgentOptions) {
+func (w *workloadMetricsCollector) Collect(ch chan<- prometheus.Metric) {
+	w.collectDeploymentResourceMetrics(ch)
+	w.collectDaemonSetResourceMetrics(ch)
+	w.collectStatefulSetResourceMetrics(ch)
+}
+
+func (w *workloadMetricsCollector) collectDaemonSetResourceMetrics(ch chan<- prometheus.Metric) {
 	daemonSets, err := w.daemonSetLister.List(labels.Everything())
 	if err != nil {
 		klog.Errorf("List all daemonSets error:%v", err)
@@ -150,27 +122,28 @@ func (w *WorkloadLevelMetricsCollector) collectDaemonSetResourceMetrics(agentOpt
 			values.WorkloadTypeLabelKey: "daemonset",
 			values.WorkloadNameLabelKey: daemonSet.Name,
 			values.NamespaceLabelKey:    daemonSet.Namespace,
-			values.ClusterNameLabelKey:  agentOptions.ClusterName,
-			values.ClusterIdLabelKey:    agentOptions.ClusterId,
+			values.ClusterNameLabelKey:  w.clusterName,
+			values.ClusterIdLabelKey:    w.clusterId,
 			values.LabelsLabelKey:       string(daemonSetLabels),
 		}
-		w.collectDaemonSetPodMetrics(daemonSet, agentOptions, selector, containerNoneCareLabelValues)
-		w.collectDaemonSetCostMetrics(daemonSet, agentOptions, selector, containerNoneCareLabelValues)
+		w.collectDaemonSetPodMetrics(daemonSet, selector, containerNoneCareLabelValues, ch)
+		w.collectDaemonSetCostMetrics(daemonSet, selector, containerNoneCareLabelValues, ch)
 
 		containerCareLabelValues := prometheus.Labels{
 			values.WorkloadTypeLabelKey: "daemonset",
 			values.WorkloadNameLabelKey: daemonSet.Name,
 			values.NamespaceLabelKey:    daemonSet.Namespace,
-			values.ClusterNameLabelKey:  agentOptions.ClusterName,
-			values.ClusterIdLabelKey:    agentOptions.ClusterId,
+			values.ClusterNameLabelKey:  w.clusterName,
+			values.ClusterIdLabelKey:    w.clusterId,
 			values.LabelsLabelKey:       string(daemonSetLabels),
 		}
-		w.collectDaemonSetRequestMetrics(daemonSet, agentOptions, selector, containerCareLabelValues)
-		w.collectDaemonSetUsageMetrics(daemonSet, agentOptions, selector, containerCareLabelValues)
+		w.collectDaemonSetRequestMetrics(daemonSet, selector, containerCareLabelValues, ch)
+		w.collectDaemonSetUsageMetrics(daemonSet, selector, containerCareLabelValues, ch)
 	}
 }
 
-func (w *WorkloadLevelMetricsCollector) collectDaemonSetPodMetrics(ds *appsv1.DaemonSet, agentOptions *options.AgentOptions, selector labels.Selector, labels prometheus.Labels) {
+func (w *workloadMetricsCollector) collectDaemonSetPodMetrics(ds *appsv1.DaemonSet, selector labels.Selector,
+	labels prometheus.Labels, ch chan<- prometheus.Metric) {
 	pods, err := w.podLister.Pods(ds.Namespace).List(selector)
 	if err != nil {
 		klog.Errorf("List all pods error:%v", err)
@@ -178,10 +151,12 @@ func (w *WorkloadLevelMetricsCollector) collectDaemonSetPodMetrics(ds *appsv1.Da
 	}
 	podCount := float64(len(pods))
 	labels[values.ResourceTypeLabelKey] = "pod"
-	w.workloadPodCountGV.With(labels).Set(podCount)
+	ch <- prometheus.MustNewConstMetric(workloadPodCountDesc,
+		prometheus.GaugeValue, podCount, utils.ConvertPrometheusLabelValuesInOrder(workloadCRNoneCareLabelKey, labels)...)
 }
 
-func (w *WorkloadLevelMetricsCollector) collectDaemonSetRequestMetrics(ds *appsv1.DaemonSet, agentOptions *options.AgentOptions, selector labels.Selector, labels prometheus.Labels) {
+func (w *workloadMetricsCollector) collectDaemonSetRequestMetrics(ds *appsv1.DaemonSet, selector labels.Selector,
+	labels prometheus.Labels, ch chan<- prometheus.Metric) {
 	pods, err := w.podLister.Pods(ds.Namespace).List(selector)
 	if err != nil {
 		klog.Errorf("List all pods error:%v", err)
@@ -208,16 +183,19 @@ func (w *WorkloadLevelMetricsCollector) collectDaemonSetRequestMetrics(ds *appsv
 	labels[values.ResourceTypeLabelKey] = string(corev1.ResourceCPU)
 	for containerName, cpu := range cpuTotalRequest {
 		labels[values.ContainerNameLabelKey] = containerName
-		w.workloadResourceRequestGV.With(labels).Set(cpu)
+		ch <- prometheus.MustNewConstMetric(workloadResourceRequestDesc,
+			prometheus.GaugeValue, cpu, utils.ConvertPrometheusLabelValuesInOrder(workloadCRCareLabelKey, labels)...)
 	}
 	labels[values.ResourceTypeLabelKey] = string(corev1.ResourceMemory)
 	for containerName, ram := range ramTotalRequest {
 		labels[values.ContainerNameLabelKey] = containerName
-		w.workloadResourceRequestGV.With(labels).Set(ram)
+		ch <- prometheus.MustNewConstMetric(workloadResourceRequestDesc,
+			prometheus.GaugeValue, ram, utils.ConvertPrometheusLabelValuesInOrder(workloadCRCareLabelKey, labels)...)
 	}
 }
 
-func (w *WorkloadLevelMetricsCollector) collectDaemonSetUsageMetrics(ds *appsv1.DaemonSet, agentOptions *options.AgentOptions, selector labels.Selector, labels prometheus.Labels) {
+func (w *workloadMetricsCollector) collectDaemonSetUsageMetrics(ds *appsv1.DaemonSet, selector labels.Selector,
+	labels prometheus.Labels, ch chan<- prometheus.Metric) {
 	pods, err := w.metricsClient.MetricsV1beta1().PodMetricses(ds.Namespace).List(context.TODO(), metav1.ListOptions{
 		LabelSelector: selector.String(),
 	})
@@ -245,17 +223,20 @@ func (w *WorkloadLevelMetricsCollector) collectDaemonSetUsageMetrics(ds *appsv1.
 	labels[values.ResourceTypeLabelKey] = string(corev1.ResourceCPU)
 	for containerName, cpu := range cpuTotalUsage {
 		labels[values.ContainerNameLabelKey] = containerName
-		w.workloadResourceUsageGV.With(labels).Set(cpu)
+		ch <- prometheus.MustNewConstMetric(workloadResourceUsageDesc,
+			prometheus.GaugeValue, cpu, utils.ConvertPrometheusLabelValuesInOrder(workloadCRCareLabelKey, labels)...)
 	}
 
 	labels[values.ResourceTypeLabelKey] = string(corev1.ResourceMemory)
 	for containerName, ram := range memoryTotalUsage {
 		labels[values.ContainerNameLabelKey] = containerName
-		w.workloadResourceUsageGV.With(labels).Set(ram)
+		ch <- prometheus.MustNewConstMetric(workloadResourceUsageDesc,
+			prometheus.GaugeValue, ram, utils.ConvertPrometheusLabelValuesInOrder(workloadCRCareLabelKey, labels)...)
 	}
 }
 
-func (w *WorkloadLevelMetricsCollector) collectDaemonSetCostMetrics(ds *appsv1.DaemonSet, agentOptions *options.AgentOptions, selector labels.Selector, labels prometheus.Labels) {
+func (w *workloadMetricsCollector) collectDaemonSetCostMetrics(ds *appsv1.DaemonSet, selector labels.Selector,
+	labels prometheus.Labels, ch chan<- prometheus.Metric) {
 	pods, err := w.podLister.Pods(ds.Namespace).List(selector)
 	if err != nil {
 		klog.Errorf("List all pods error:%v", err)
@@ -271,10 +252,11 @@ func (w *WorkloadLevelMetricsCollector) collectDaemonSetCostMetrics(ds *appsv1.D
 	}
 
 	labels[values.ResourceTypeLabelKey] = "cost"
-	w.workloadResourceCostGV.With(labels).Set(totalCost)
+	ch <- prometheus.MustNewConstMetric(workloadResourceCostDesc,
+		prometheus.GaugeValue, totalCost, utils.ConvertPrometheusLabelValuesInOrder(workloadCRNoneCareLabelKey, labels)...)
 }
 
-func (w *WorkloadLevelMetricsCollector) collectStatefulSetResourceMetrics(agentOptions *options.AgentOptions) {
+func (w *workloadMetricsCollector) collectStatefulSetResourceMetrics(ch chan<- prometheus.Metric) {
 	statefulSets, err := w.statefulSetLister.List(labels.Everything())
 	if err != nil {
 		klog.Errorf("List all statefulSet error:%v", err)
@@ -296,27 +278,28 @@ func (w *WorkloadLevelMetricsCollector) collectStatefulSetResourceMetrics(agentO
 			values.WorkloadTypeLabelKey: "statefulset",
 			values.WorkloadNameLabelKey: statefulSet.Name,
 			values.NamespaceLabelKey:    statefulSet.Namespace,
-			values.ClusterNameLabelKey:  agentOptions.ClusterName,
-			values.ClusterIdLabelKey:    agentOptions.ClusterId,
+			values.ClusterNameLabelKey:  w.clusterName,
+			values.ClusterIdLabelKey:    w.clusterId,
 			values.LabelsLabelKey:       string(statefulSetLabels),
 		}
-		w.collectStatefulSetPodMetrics(statefulSet, agentOptions, selector, containerNoneCareLabelValues)
-		w.collectStatefulSetCostMetrics(statefulSet, agentOptions, selector, containerNoneCareLabelValues)
+		w.collectStatefulSetPodMetrics(statefulSet, selector, containerNoneCareLabelValues, ch)
+		w.collectStatefulSetCostMetrics(statefulSet, selector, containerNoneCareLabelValues, ch)
 
 		containerCareLabelValues := prometheus.Labels{
 			values.WorkloadTypeLabelKey: "statefulset",
 			values.WorkloadNameLabelKey: statefulSet.Name,
 			values.NamespaceLabelKey:    statefulSet.Namespace,
-			values.ClusterNameLabelKey:  agentOptions.ClusterName,
-			values.ClusterIdLabelKey:    agentOptions.ClusterId,
+			values.ClusterNameLabelKey:  w.clusterName,
+			values.ClusterIdLabelKey:    w.clusterId,
 			values.LabelsLabelKey:       string(statefulSetLabels),
 		}
-		w.collectStatefulSetRequestMetrics(statefulSet, agentOptions, selector, containerCareLabelValues)
-		w.collectStatefulSetUsageMetrics(statefulSet, agentOptions, selector, containerCareLabelValues)
+		w.collectStatefulSetRequestMetrics(statefulSet, selector, containerCareLabelValues, ch)
+		w.collectStatefulSetUsageMetrics(statefulSet, selector, containerCareLabelValues, ch)
 	}
 }
 
-func (w *WorkloadLevelMetricsCollector) collectStatefulSetPodMetrics(sf *appsv1.StatefulSet, agentOptions *options.AgentOptions, selector labels.Selector, labels prometheus.Labels) {
+func (w *workloadMetricsCollector) collectStatefulSetPodMetrics(sf *appsv1.StatefulSet, selector labels.Selector,
+	labels prometheus.Labels, ch chan<- prometheus.Metric) {
 	pods, err := w.podLister.Pods(sf.Namespace).List(selector)
 	if err != nil {
 		klog.Errorf("List all pods error:%v", err)
@@ -324,10 +307,12 @@ func (w *WorkloadLevelMetricsCollector) collectStatefulSetPodMetrics(sf *appsv1.
 	}
 	podCount := float64(len(pods))
 	labels[values.ResourceTypeLabelKey] = "pod"
-	w.workloadPodCountGV.With(labels).Set(podCount)
+	ch <- prometheus.MustNewConstMetric(workloadPodCountDesc,
+		prometheus.GaugeValue, podCount, utils.ConvertPrometheusLabelValuesInOrder(workloadCRNoneCareLabelKey, labels)...)
 }
 
-func (w *WorkloadLevelMetricsCollector) collectStatefulSetRequestMetrics(sf *appsv1.StatefulSet, agentOptions *options.AgentOptions, selector labels.Selector, labels prometheus.Labels) {
+func (w *workloadMetricsCollector) collectStatefulSetRequestMetrics(sf *appsv1.StatefulSet, selector labels.Selector,
+	labels prometheus.Labels, ch chan<- prometheus.Metric) {
 	pods, err := w.podLister.Pods(sf.Namespace).List(selector)
 	if err != nil {
 		klog.Errorf("List all pods error:%v", err)
@@ -354,16 +339,19 @@ func (w *WorkloadLevelMetricsCollector) collectStatefulSetRequestMetrics(sf *app
 	labels[values.ResourceTypeLabelKey] = string(corev1.ResourceCPU)
 	for containerName, cpu := range cpuTotalRequest {
 		labels[values.ContainerNameLabelKey] = containerName
-		w.workloadResourceRequestGV.With(labels).Set(cpu)
+		ch <- prometheus.MustNewConstMetric(workloadResourceRequestDesc,
+			prometheus.GaugeValue, cpu, utils.ConvertPrometheusLabelValuesInOrder(workloadCRCareLabelKey, labels)...)
 	}
 	labels[values.ResourceTypeLabelKey] = string(corev1.ResourceMemory)
 	for containerName, ram := range ramTotalRequest {
 		labels[values.ContainerNameLabelKey] = containerName
-		w.workloadResourceRequestGV.With(labels).Set(ram)
+		ch <- prometheus.MustNewConstMetric(workloadResourceRequestDesc,
+			prometheus.GaugeValue, ram, utils.ConvertPrometheusLabelValuesInOrder(workloadCRCareLabelKey, labels)...)
 	}
 }
 
-func (w *WorkloadLevelMetricsCollector) collectStatefulSetUsageMetrics(sf *appsv1.StatefulSet, agentOptions *options.AgentOptions, selector labels.Selector, labels prometheus.Labels) {
+func (w *workloadMetricsCollector) collectStatefulSetUsageMetrics(sf *appsv1.StatefulSet, selector labels.Selector,
+	labels prometheus.Labels, ch chan<- prometheus.Metric) {
 	pods, err := w.metricsClient.MetricsV1beta1().PodMetricses(sf.Namespace).List(context.TODO(), metav1.ListOptions{
 		LabelSelector: selector.String(),
 	})
@@ -391,17 +379,20 @@ func (w *WorkloadLevelMetricsCollector) collectStatefulSetUsageMetrics(sf *appsv
 	labels[values.ResourceTypeLabelKey] = string(corev1.ResourceCPU)
 	for containerName, cpu := range cpuTotalUsage {
 		labels[values.ContainerNameLabelKey] = containerName
-		w.workloadResourceUsageGV.With(labels).Set(cpu)
+		ch <- prometheus.MustNewConstMetric(workloadResourceUsageDesc,
+			prometheus.GaugeValue, cpu, utils.ConvertPrometheusLabelValuesInOrder(workloadCRCareLabelKey, labels)...)
 	}
 
 	labels[values.ResourceTypeLabelKey] = string(corev1.ResourceMemory)
 	for containerName, ram := range memoryTotalUsage {
 		labels[values.ContainerNameLabelKey] = containerName
-		w.workloadResourceUsageGV.With(labels).Set(ram)
+		ch <- prometheus.MustNewConstMetric(workloadResourceUsageDesc,
+			prometheus.GaugeValue, ram, utils.ConvertPrometheusLabelValuesInOrder(workloadCRCareLabelKey, labels)...)
 	}
 }
 
-func (w *WorkloadLevelMetricsCollector) collectStatefulSetCostMetrics(sf *appsv1.StatefulSet, agentOptions *options.AgentOptions, selector labels.Selector, labels prometheus.Labels) {
+func (w *workloadMetricsCollector) collectStatefulSetCostMetrics(sf *appsv1.StatefulSet, selector labels.Selector,
+	labels prometheus.Labels, ch chan<- prometheus.Metric) {
 	pods, err := w.podLister.Pods(sf.Namespace).List(selector)
 	if err != nil {
 		klog.Errorf("List all pods error:%v", err)
@@ -414,10 +405,11 @@ func (w *WorkloadLevelMetricsCollector) collectStatefulSetCostMetrics(sf *appsv1
 	}
 
 	labels[values.ResourceTypeLabelKey] = "cost"
-	w.workloadResourceCostGV.With(labels).Set(totalCost)
+	ch <- prometheus.MustNewConstMetric(workloadResourceCostDesc,
+		prometheus.GaugeValue, totalCost, utils.ConvertPrometheusLabelValuesInOrder(workloadCRNoneCareLabelKey, labels)...)
 }
 
-func (w *WorkloadLevelMetricsCollector) collectDeploymentResourceMetrics(agentOptions *options.AgentOptions) {
+func (w *workloadMetricsCollector) collectDeploymentResourceMetrics(ch chan<- prometheus.Metric) {
 	deployments, err := w.deploymentLister.List(labels.Everything())
 	if err != nil {
 		klog.Errorf("List all deployment error:%v", err)
@@ -439,27 +431,28 @@ func (w *WorkloadLevelMetricsCollector) collectDeploymentResourceMetrics(agentOp
 			values.WorkloadTypeLabelKey: "deployment",
 			values.WorkloadNameLabelKey: deployment.Name,
 			values.NamespaceLabelKey:    deployment.Namespace,
-			values.ClusterNameLabelKey:  agentOptions.ClusterName,
-			values.ClusterIdLabelKey:    agentOptions.ClusterId,
+			values.ClusterNameLabelKey:  w.clusterName,
+			values.ClusterIdLabelKey:    w.clusterId,
 			values.LabelsLabelKey:       string(deploymentLabels),
 		}
-		w.collectDeploymentPodMetrics(deployment, agentOptions, selector, containerNoneCareLabelValues)
-		w.collectDeploymentCostMetrics(deployment, agentOptions, selector, containerNoneCareLabelValues)
+		w.collectDeploymentPodMetrics(deployment, selector, containerNoneCareLabelValues, ch)
+		w.collectDeploymentCostMetrics(deployment, selector, containerNoneCareLabelValues, ch)
 
 		containerCareLabelValues := prometheus.Labels{
 			values.WorkloadTypeLabelKey: "deployment",
 			values.WorkloadNameLabelKey: deployment.Name,
 			values.NamespaceLabelKey:    deployment.Namespace,
-			values.ClusterNameLabelKey:  agentOptions.ClusterName,
-			values.ClusterIdLabelKey:    agentOptions.ClusterId,
+			values.ClusterNameLabelKey:  w.clusterName,
+			values.ClusterIdLabelKey:    w.clusterId,
 			values.LabelsLabelKey:       string(deploymentLabels),
 		}
-		w.collectDeploymentRequestMetrics(deployment, agentOptions, selector, containerCareLabelValues)
-		w.collectDeploymentUsageMetrics(deployment, agentOptions, selector, containerCareLabelValues)
+		w.collectDeploymentRequestMetrics(deployment, selector, containerCareLabelValues, ch)
+		w.collectDeploymentUsageMetrics(deployment, selector, containerCareLabelValues, ch)
 	}
 }
 
-func (w *WorkloadLevelMetricsCollector) collectDeploymentPodMetrics(dm *appsv1.Deployment, agentOptions *options.AgentOptions, selector labels.Selector, labels prometheus.Labels) {
+func (w *workloadMetricsCollector) collectDeploymentPodMetrics(dm *appsv1.Deployment, selector labels.Selector,
+	labels prometheus.Labels, ch chan<- prometheus.Metric) {
 	pods, err := w.podLister.Pods(dm.Namespace).List(selector)
 	if err != nil {
 		klog.Errorf("List all pods error:%v", err)
@@ -467,10 +460,12 @@ func (w *WorkloadLevelMetricsCollector) collectDeploymentPodMetrics(dm *appsv1.D
 	}
 	podCount := float64(len(pods))
 	labels[values.ResourceTypeLabelKey] = "pod"
-	w.workloadPodCountGV.With(labels).Set(podCount)
+	ch <- prometheus.MustNewConstMetric(workloadPodCountDesc,
+		prometheus.GaugeValue, podCount, utils.ConvertPrometheusLabelValuesInOrder(workloadCRNoneCareLabelKey, labels)...)
 }
 
-func (w *WorkloadLevelMetricsCollector) collectDeploymentRequestMetrics(dm *appsv1.Deployment, agentOptions *options.AgentOptions, selector labels.Selector, labels prometheus.Labels) {
+func (w *workloadMetricsCollector) collectDeploymentRequestMetrics(dm *appsv1.Deployment, selector labels.Selector,
+	labels prometheus.Labels, ch chan<- prometheus.Metric) {
 	pods, err := w.podLister.Pods(dm.Namespace).List(selector)
 	if err != nil {
 		klog.Errorf("List all pods error:%v", err)
@@ -497,16 +492,19 @@ func (w *WorkloadLevelMetricsCollector) collectDeploymentRequestMetrics(dm *apps
 	labels[values.ResourceTypeLabelKey] = string(corev1.ResourceCPU)
 	for containerName, cpu := range cpuTotalRequest {
 		labels[values.ContainerNameLabelKey] = containerName
-		w.workloadResourceRequestGV.With(labels).Set(cpu)
+		ch <- prometheus.MustNewConstMetric(workloadResourceRequestDesc,
+			prometheus.GaugeValue, cpu, utils.ConvertPrometheusLabelValuesInOrder(workloadCRCareLabelKey, labels)...)
 	}
 	labels[values.ResourceTypeLabelKey] = string(corev1.ResourceMemory)
 	for containerName, ram := range ramTotalRequest {
 		labels[values.ContainerNameLabelKey] = containerName
-		w.workloadResourceRequestGV.With(labels).Set(ram)
+		ch <- prometheus.MustNewConstMetric(workloadResourceRequestDesc,
+			prometheus.GaugeValue, ram, utils.ConvertPrometheusLabelValuesInOrder(workloadCRCareLabelKey, labels)...)
 	}
 }
 
-func (w *WorkloadLevelMetricsCollector) collectDeploymentUsageMetrics(dm *appsv1.Deployment, agentOptions *options.AgentOptions, selector labels.Selector, labels prometheus.Labels) {
+func (w *workloadMetricsCollector) collectDeploymentUsageMetrics(dm *appsv1.Deployment, selector labels.Selector,
+	labels prometheus.Labels, ch chan<- prometheus.Metric) {
 	pods, err := w.metricsClient.MetricsV1beta1().PodMetricses(dm.Namespace).List(context.TODO(), metav1.ListOptions{
 		LabelSelector: selector.String(),
 	})
@@ -534,17 +532,20 @@ func (w *WorkloadLevelMetricsCollector) collectDeploymentUsageMetrics(dm *appsv1
 	labels[values.ResourceTypeLabelKey] = string(corev1.ResourceCPU)
 	for containerName, cpu := range cpuTotalUsage {
 		labels[values.ContainerNameLabelKey] = containerName
-		w.workloadResourceUsageGV.With(labels).Set(cpu)
+		ch <- prometheus.MustNewConstMetric(workloadResourceUsageDesc,
+			prometheus.GaugeValue, cpu, utils.ConvertPrometheusLabelValuesInOrder(workloadCRCareLabelKey, labels)...)
 	}
 
 	labels[values.ResourceTypeLabelKey] = string(corev1.ResourceMemory)
 	for containerName, ram := range memoryTotalUsage {
 		labels[values.ContainerNameLabelKey] = containerName
-		w.workloadResourceUsageGV.With(labels).Set(ram)
+		ch <- prometheus.MustNewConstMetric(workloadResourceUsageDesc,
+			prometheus.GaugeValue, ram, utils.ConvertPrometheusLabelValuesInOrder(workloadCRCareLabelKey, labels)...)
 	}
 }
 
-func (w *WorkloadLevelMetricsCollector) collectDeploymentCostMetrics(dm *appsv1.Deployment, agentOptions *options.AgentOptions, selector labels.Selector, labels prometheus.Labels) {
+func (w *workloadMetricsCollector) collectDeploymentCostMetrics(dm *appsv1.Deployment, selector labels.Selector,
+	labels prometheus.Labels, ch chan<- prometheus.Metric) {
 	pods, err := w.podLister.Pods(dm.Namespace).List(selector)
 	if err != nil {
 		klog.Errorf("List all pods error:%v", err)
@@ -557,5 +558,25 @@ func (w *WorkloadLevelMetricsCollector) collectDeploymentCostMetrics(dm *appsv1.
 	}
 
 	labels[values.ResourceTypeLabelKey] = "cost"
-	w.workloadResourceCostGV.With(labels).Set(totalCost)
+	ch <- prometheus.MustNewConstMetric(workloadResourceCostDesc,
+		prometheus.GaugeValue, totalCost, utils.ConvertPrometheusLabelValuesInOrder(workloadCRNoneCareLabelKey, labels)...)
+}
+
+func RegisterWorkloadLevelMetricsCollection(agentOptions *options.AgentOptions,
+	client *versioned.Clientset,
+	provider cloudprice.CloudProviderInterface,
+	coreResourceInformerLister *api.CoreResourceInformerLister) {
+	workloadMetricsCollector := &workloadMetricsCollector{
+		clusterId:         agentOptions.ClusterId,
+		clusterName:       agentOptions.ClusterName,
+		metricsClient:     client,
+		provider:          provider,
+		podLister:         coreResourceInformerLister.PodLister,
+		nodeLister:        coreResourceInformerLister.NodeLister,
+		deploymentLister:  coreResourceInformerLister.DeploymentLister,
+		statefulSetLister: coreResourceInformerLister.StatefulSetLister,
+		daemonSetLister:   coreResourceInformerLister.DaemonSetLister,
+	}
+
+	prometheus.MustRegister(workloadMetricsCollector)
 }

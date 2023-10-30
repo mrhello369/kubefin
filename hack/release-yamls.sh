@@ -25,7 +25,7 @@ readonly YAML_OUTPUT_DIR=${2:?"Second argument must be the output dir"}
 rm -fr ${YAML_OUTPUT_DIR}/*.yaml
 
 # generate the cluster deployment yaml
-hack/init-primary-config.sh default kubefin-server true "${TAG}"
+hack/init-primary-config.sh auto cluster-0 true "${TAG}"
 
 # Generated KubeFin component YAML files
 readonly KUBEFIN_YAML=${YAML_OUTPUT_DIR}/kubefin.yaml
