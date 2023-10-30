@@ -158,7 +158,7 @@ func (c *AckCloudProvider) GetNodeHourlyPrice(node *v1.Node) (*api.InstancePrice
 		CPUCore:              nodeSpec.CPUCount,
 		CPUCoreHourlyPrice:   nodePrice * c.cpuMemoryCostRatio / (c.cpuMemoryCostRatio + 1),
 		RamGiB:               nodeSpec.RAMGBCount,
-		RAMGBHourlyPrice:     nodePrice / (c.cpuMemoryCostRatio + 1),
+		RAMGiBHourlyPrice:    nodePrice / (c.cpuMemoryCostRatio + 1),
 		InstanceType:         nodeType,
 		BillingMode:          values.BillingModeOnDemand,
 		BillingPeriod:        0,

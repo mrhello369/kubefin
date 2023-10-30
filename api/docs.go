@@ -502,12 +502,16 @@ const docTemplate = `{
                     "description": "ConnectionTime shows the time the cluster connected",
                     "type": "integer"
                 },
-                "cpuCoreCapacity": {
-                    "description": "CPUCoreCapacity means all nodes' cpu core capacity",
+                "cpuCoreAvailable": {
+                    "description": "CPUCoreAvailable means all nodes' available cpu core",
                     "type": "number"
                 },
                 "cpuCoreRequest": {
                     "description": "CPUCoreRequest means all pods' cpu core request",
+                    "type": "number"
+                },
+                "cpuCoreSystemTaken": {
+                    "description": "CPUCoreSystemTaken means the cpu taken by system",
                     "type": "number"
                 },
                 "cpuCoreTotal": {
@@ -542,20 +546,24 @@ const docTemplate = `{
                 "podUnscheduledCurrent": {
                     "type": "integer"
                 },
-                "ramGBCapacity": {
-                    "description": "RAMGBCapacity means all nodes' ram gb capacity",
+                "ramGiBAvailable": {
+                    "description": "RAMGiBAvailable means all nodes' available ram GiB",
                     "type": "number"
                 },
-                "ramGBRequest": {
-                    "description": "RAMGBRequest all pods' ram gb request",
+                "ramGiBRequest": {
+                    "description": "RAMGiBRequest all pods' ram GiB request",
                     "type": "number"
                 },
-                "ramGBTotal": {
-                    "description": "RAMGBTotal means all nodes' ram gb",
+                "ramGiBSystemTaken": {
+                    "description": "RAMGiBSystemTaken means the rm taken by system",
                     "type": "number"
                 },
-                "ramGBUsage": {
-                    "description": "RAMGBUsage means all pods' ram gb usage",
+                "ramGiBTotal": {
+                    "description": "RAMGiBTotal means all nodes' ram GiB",
+                    "type": "number"
+                },
+                "ramGiBUsage": {
+                    "description": "RAMGiBUsage means all pods' ram GiB usage",
                     "type": "number"
                 },
                 "spotBillingNodeNumbersCurrent": {
@@ -601,10 +609,10 @@ const docTemplate = `{
                     "description": "PodCount means the average pod count in this period",
                     "type": "number"
                 },
-                "ramGBRequest": {
+                "ramGiBRequest": {
                     "type": "number"
                 },
-                "ramGBUsage": {
+                "ramGiBUsage": {
                     "type": "number"
                 },
                 "timestamp": {
@@ -659,12 +667,12 @@ const docTemplate = `{
                 "ramCost": {
                     "type": "number"
                 },
-                "ramGBCount": {
-                    "description": "RAMGBCount means the average ram hour count in this period",
+                "ramGiBCount": {
+                    "description": "RAMGiBCount means the average ram hour count in this period",
                     "type": "number"
                 },
-                "ramGBUsage": {
-                    "description": "RAMGBUsage means the average ram hour usage in this period",
+                "ramGiBUsage": {
+                    "description": "RAMGiBUsage means the average ram hour usage in this period",
                     "type": "number"
                 },
                 "timestamp": {
@@ -696,19 +704,19 @@ const docTemplate = `{
                 "clusterId": {
                     "type": "string"
                 },
-                "resourceAllocatableValues": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.SamplePair"
-                    }
-                },
-                "resourceCapacityValues": {
+                "resourceAvailableValues": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/model.SamplePair"
                     }
                 },
                 "resourceRequestValues": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.SamplePair"
+                    }
+                },
+                "resourceSystemTakenValues": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/model.SamplePair"
@@ -768,10 +776,10 @@ const docTemplate = `{
                     "description": "PodCount means the average pod count in this period",
                     "type": "number"
                 },
-                "ramGBRequest": {
+                "ramGiBRequest": {
                     "type": "number"
                 },
-                "ramGBUsage": {
+                "ramGiBUsage": {
                     "type": "number"
                 },
                 "timestamp": {

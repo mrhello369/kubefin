@@ -103,6 +103,6 @@ func ParsePodResourceCost(pod *v1.Pod, provider cloudprice.CloudProviderInterfac
 	}
 
 	cpuCosts := cpu * priceInfo.CPUCoreHourlyPrice
-	memoryCosts := ram * priceInfo.RAMGBHourlyPrice
+	memoryCosts := ram * priceInfo.RAMGiBHourlyPrice
 	return cpuCosts + memoryCosts
 }
