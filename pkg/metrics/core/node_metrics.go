@@ -235,16 +235,16 @@ func (n *nodeMetricsCollector) collectNodeCost(ch chan<- prometheus.Metric) {
 		ch <- prometheus.MustNewConstMetric(nodeCPUCoreHourlyCostDesc,
 			prometheus.GaugeValue, nodeCostInfo.CPUCoreHourlyPrice, utils.ConvertPrometheusLabelValuesInOrder(metricsCostLabelKey, metricsLabelValues)...)
 		ch <- prometheus.MustNewConstMetric(nodeRAMGBHourlyCostDesc,
-			prometheus.GaugeValue, nodeCostInfo.RAMGBHourlyPrice, utils.ConvertPrometheusLabelValuesInOrder(metricsCostLabelKey, metricsLabelValues)...)
+			prometheus.GaugeValue, nodeCostInfo.RAMGiBHourlyPrice, utils.ConvertPrometheusLabelValuesInOrder(metricsCostLabelKey, metricsLabelValues)...)
 		ch <- prometheus.MustNewConstMetric(nodeTotalCostDesc,
 			prometheus.GaugeValue, nodeCostInfo.NodeTotalHourlyPrice, utils.ConvertPrometheusLabelValuesInOrder(metricsCostLabelKey, metricsLabelValues)...)
 
 		metricsLabelValues[values.ResourceTypeLabelKey] = string(corev1.ResourceCPU)
 		ch <- prometheus.MustNewConstMetric(nodeResourceHourlyCostDesc,
-			prometheus.GaugeValue, nodeCostInfo.CPUCoreHourlyPrice, utils.ConvertPrometheusLabelValuesInOrder(metricsCostUnifiedLabelKey, metricsLabelValues)...)
+			prometheus.GaugeValue, nodeCostInfo.CPUCoreHourlyPrice*nodeCostInfo.CPUCore, utils.ConvertPrometheusLabelValuesInOrder(metricsCostUnifiedLabelKey, metricsLabelValues)...)
 		metricsLabelValues[values.ResourceTypeLabelKey] = string(corev1.ResourceMemory)
 		ch <- prometheus.MustNewConstMetric(nodeResourceHourlyCostDesc,
-			prometheus.GaugeValue, nodeCostInfo.RAMGBHourlyPrice, utils.ConvertPrometheusLabelValuesInOrder(metricsCostUnifiedLabelKey, metricsLabelValues)...)
+			prometheus.GaugeValue, nodeCostInfo.RAMGiBHourlyPrice*nodeCostInfo.RamGiB, utils.ConvertPrometheusLabelValuesInOrder(metricsCostUnifiedLabelKey, metricsLabelValues)...)
 	}
 }
 

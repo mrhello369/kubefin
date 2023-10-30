@@ -126,7 +126,7 @@ func (c *DefaultCloudProvider) GetNodeHourlyPrice(node *v1.Node) (*api.InstanceP
 		CPUCore:              cpuCores + CPUCoreDeviation,
 		CPUCoreHourlyPrice:   c.CpuCoreHourlyPrice,
 		RamGiB:               (ramBytes / values.GBInBytes) + RAMGBDeviation,
-		RAMGBHourlyPrice:     c.RamGBHourlyPrice,
+		RAMGiBHourlyPrice:    c.RamGBHourlyPrice,
 		InstanceType:         "default_instance_type",
 		BillingMode:          values.BillingModeOnDemand,
 		BillingPeriod:        0,
