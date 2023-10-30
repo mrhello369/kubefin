@@ -30,7 +30,6 @@ import (
 	"github.com/kubefin/kubefin/pkg/api"
 	"github.com/kubefin/kubefin/pkg/cloudprice/ack"
 	"github.com/kubefin/kubefin/pkg/cloudprice/defaultcloud"
-	"github.com/kubefin/kubefin/pkg/cloudprice/eks"
 )
 
 type CloudProviderInterface interface {
@@ -42,10 +41,11 @@ func NewCloudProvider(client kubernetes.Interface, agentOptions *options.AgentOp
 	switch agentOptions.CloudProvider {
 	case api.CloudProviderAck:
 		return ack.NewAckCloudProvider(client, agentOptions)
-	default:
+	case api.CloudProviderAuto:
 		// If config cloud provider is empty or cannot retrieve, checking it automatically
 		return initCloudProviderAuto(client, agentOptions)
 	}
+	return nil, fmt.Errorf("cloud provider %s is not supported", agentOptions.CloudProvider)
 }
 
 func initCloudProviderAuto(client kubernetes.Interface, agentOptions *options.AgentOptions) (CloudProviderInterface, error) {
@@ -60,7 +60,7 @@ func initCloudProviderAuto(client kubernetes.Interface, agentOptions *options.Ag
 
 	cloudProviderID := strings.ToLower(nodes.Items[0].Spec.ProviderID)
 	if strings.HasPrefix(cloudProviderID, "aws") {
-		return eks.NewEksCloudProvider(client, agentOptions)
+		klog.Warning("KubeFin doesn't support AWS yet, default pricing data will be used")
 	}
 	if strings.HasPrefix(cloudProviderID, "gce") {
 		klog.Warning("KubeFin doesn't support GCE yet, default pricing data will be used")
@@ -68,5 +68,6 @@ func initCloudProviderAuto(client kubernetes.Interface, agentOptions *options.Ag
 	if strings.HasPrefix(cloudProviderID, "azure") {
 		klog.Warning("KubeFin doesn't support Azure yet, default pricing data will be used")
 	}
+	agentOptions.CloudProvider = api.CloudProviderOnPremise
 	return defaultcloud.NewDefaultCloudProvider(client, agentOptions)
 }

@@ -131,6 +131,6 @@ func (c *DefaultCloudProvider) GetNodeHourlyPrice(node *v1.Node) (*api.InstanceP
 		BillingMode:          values.BillingModeOnDemand,
 		BillingPeriod:        0,
 		Region:               "default_region",
-		CloudProvider:        api.CloudProviderDefault,
+		CloudProvider:        api.CloudProviderOnPremise,
 	}, nil
 }

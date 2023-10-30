@@ -18,7 +18,6 @@ package metrics
 
 import (
 	"context"
-	"time"
 
 	"k8s.io/metrics/pkg/client/clientset/versioned"
 
@@ -28,40 +27,13 @@ import (
 	"github.com/kubefin/kubefin/pkg/metrics/core"
 )
 
-type AgentMetricsCollector struct {
-	agentOptions                  *options.AgentOptions
-	ctx                           context.Context
-	interval                      time.Duration
-	clusterMetricsCollector       *core.ClusterLevelMetricsCollector
-	nodeLevelMetricsCollector     *core.NodeLevelMetricsCollector
-	workloadLevelMetricsCollector *core.WorkloadLevelMetricsCollector
-}
-
-func NewAgentMetricsCollector(ctx context.Context,
+func RegisterAgentMetricsCollector(ctx context.Context,
 	options *options.AgentOptions,
 	coreResourceInformerLister *api.CoreResourceInformerLister,
 	provider cloudprice.CloudProviderInterface,
-	metricsClientSet *versioned.Clientset) *AgentMetricsCollector {
-	core.RegisterPodLevelMetricsCollection(options, metricsClientSet, provider,
-		coreResourceInformerLister.PodLister, coreResourceInformerLister.NodeLister)
-	return &AgentMetricsCollector{
-		ctx:                       ctx,
-		agentOptions:              options,
-		interval:                  options.ScrapMetricsInterval,
-		clusterMetricsCollector:   core.NewClusterLevelMetricsCollector(provider, coreResourceInformerLister.NodeLister),
-		nodeLevelMetricsCollector: core.NewNodeLevelMetricsCollector(metricsClientSet, provider, coreResourceInformerLister),
-		workloadLevelMetricsCollector: core.NewWorkloadLevelMetricsCollector(
-			metricsClientSet, provider,
-			coreResourceInformerLister.PodLister,
-			coreResourceInformerLister.NodeLister,
-			coreResourceInformerLister.DaemonSetLister,
-			coreResourceInformerLister.DeploymentLister,
-			coreResourceInformerLister.StatefulSetLister),
-	}
-}
-
-func (a *AgentMetricsCollector) StartAgentMetricsCollector() {
-	go a.nodeLevelMetricsCollector.StartCollectNodeLevelMetrics(a.ctx, a.interval, a.agentOptions)
-	go a.workloadLevelMetricsCollector.StartCollectWorkloadLevelMetrics(a.ctx, a.interval, a.agentOptions)
-	go a.clusterMetricsCollector.StartCollectClusterLevelMetrics(a.ctx, a.interval, a.agentOptions)
+	metricsClientSet *versioned.Clientset) {
+	core.RegisterClusterLevelMetricsCollection(options, metricsClientSet, provider, coreResourceInformerLister)
+	core.RegisterPodLevelMetricsCollection(options, metricsClientSet, provider, coreResourceInformerLister)
+	core.RegisterNodeLevelMetricsCollection(options, metricsClientSet, provider, coreResourceInformerLister)
+	core.RegisterWorkloadLevelMetricsCollection(options, metricsClientSet, provider, coreResourceInformerLister)
 }

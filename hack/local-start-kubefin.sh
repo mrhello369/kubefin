@@ -68,7 +68,7 @@ kubectl apply -f "${TMP_DIR}"/components.yaml --kubeconfig=${HOME}/.kube/cluster
 
 # Setup primary cluster
 echo_info "Start to setup primary cluster..."
-hack/init-primary-config.sh default kubefin-server true "devel"
+hack/init-primary-config.sh auto kubefin-server true "devel"
 
 export KIND_CLUSTER_NAME=kubefin-server
 export KUBECONFIG=${HOME}/.kube/kubefin-server.config
@@ -82,7 +82,7 @@ kubectl wait --for=condition=Ready pod -nkubefin mimir-0 --kubeconfig="${HOME}"/
 
 # Setup secondary cluster
 echo_info "Start to setup secondary cluster..."
-hack/init-secondary-config.sh default cluster-1 http://"${server_node_ip}:${server_node_port}"/api/v1/push
+hack/init-secondary-config.sh auto cluster-1 http://"${server_node_ip}:${server_node_port}"/api/v1/push
 
 export KIND_CLUSTER_NAME=cluster-1
 export KUBECONFIG=${HOME}/.kube/cluster-1.config

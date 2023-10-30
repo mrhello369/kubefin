@@ -25,9 +25,10 @@ const (
 	KubeFinStatusKind = "Status"
 	KubeFinListKind   = "List"
 
-	CloudProviderAck     = "ack"
-	CloudProviderEks     = "eks"
-	CloudProviderDefault = "default"
+	CloudProviderAck       = "ack"
+	CloudProviderEks       = "eks"
+	CloudProviderOnPremise = "onpremise"
+	CloudProviderAuto      = "auto"
 )
 
 var (

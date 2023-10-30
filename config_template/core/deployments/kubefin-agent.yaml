@@ -100,3 +100,22 @@ spec:
         - name: otel-collector-config
           configMap:
             name: otel-collector-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kubefin-agent-service
+  namespace: kubefin
+  labels:
+    app: kubefin-agent
+    app.kubernetes.io/component: kubefin-agent
+    app.kubernetes.io/version: devel
+    app.kubernetes.io/name: kubefin
+spec:
+  selector:
+    app: kubefin-agent
+  ports:
+    - name: kubefin-api
+      port: 8080
+      targetPort: 8080
+  type: ClusterIP
