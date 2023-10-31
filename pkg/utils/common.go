@@ -108,11 +108,11 @@ func GetCurrentTwoMonthStartEndTime() (start, end int64) {
 	return time.Now().AddDate(0, -2, 0).Unix(), time.Now().Unix()
 }
 
-func ConvertQualityToGiB(value resource.Quantity) float64 {
+func ConvertQualityToGiB(value *resource.Quantity) float64 {
 	return value.AsApproximateFloat64() / values.GBInBytes
 }
 
-func ConvertQualityToCore(value resource.Quantity) float64 {
+func ConvertQualityToCore(value *resource.Quantity) float64 {
 	return value.AsApproximateFloat64()
 }
 

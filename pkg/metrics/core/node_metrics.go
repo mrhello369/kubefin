@@ -17,14 +17,12 @@ limitations under the License.
 package core
 
 import (
-	"context"
 	"strconv"
 	"sync"
 
 	"github.com/prometheus/client_golang/prometheus"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	v1 "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
@@ -34,6 +32,7 @@ import (
 	"github.com/kubefin/kubefin/cmd/kubefin-agent/app/options"
 	"github.com/kubefin/kubefin/pkg/api"
 	"github.com/kubefin/kubefin/pkg/cloudprice"
+	metricscache "github.com/kubefin/kubefin/pkg/metrics/cache"
 	"github.com/kubefin/kubefin/pkg/utils"
 	"github.com/kubefin/kubefin/pkg/values"
 )
@@ -102,9 +101,10 @@ type nodeMetricsCollector struct {
 	clusterName string
 	clusterId   string
 
-	metricsClient *versioned.Clientset
-	provider      cloudprice.CloudProviderInterface
-	nodeLister    v1.NodeLister
+	metricsClient     *versioned.Clientset
+	usageMetricsCache *metricscache.ClusterResourceUsageMetricsCache
+	provider          cloudprice.CloudProviderInterface
+	nodeLister        v1.NodeLister
 
 	mutex        sync.Mutex
 	nodeResouece map[string]nodeResourceInfo
@@ -249,31 +249,25 @@ func (n *nodeMetricsCollector) collectNodeCost(ch chan<- prometheus.Metric) {
 }
 
 func (n *nodeMetricsCollector) collectNodeResourceUsage(ch chan<- prometheus.Metric) {
-	nodes, err := n.metricsClient.MetricsV1beta1().NodeMetricses().List(context.Background(), metav1.ListOptions{})
-	if err != nil {
-		klog.Errorf("List all node metrics error:%v", err)
-		return
-	}
-
-	for _, node := range nodes.Items {
-		nodeCostInfo, err := n.getNodeCostInfo(node.Name)
+	nodes := n.usageMetricsCache.QueryAllNodesUsage()
+	for _, node := range nodes {
+		nodeCostInfo, err := n.getNodeCostInfo(node.ResourceName)
 		if err != nil {
 			continue
 		}
 
 		metricsLabels := prometheus.Labels{
-			values.NodeNameLabelKey:    node.Name,
+			values.NodeNameLabelKey:    node.ResourceName,
 			values.ClusterNameLabelKey: n.clusterName,
 			values.ClusterIdLabelKey:   n.clusterId,
 			values.BillingModeLabelKey: nodeCostInfo.BillingMode,
 		}
-		cpu, memory := utils.ParseNodeResourceUsage(node)
 		metricsLabels[values.ResourceTypeLabelKey] = string(corev1.ResourceCPU)
 		ch <- prometheus.MustNewConstMetric(nodeResourceUsageDesc,
-			prometheus.GaugeValue, cpu, utils.ConvertPrometheusLabelValuesInOrder(resourceMetricsLabelKey, metricsLabels)...)
+			prometheus.GaugeValue, node.CPUUsage, utils.ConvertPrometheusLabelValuesInOrder(resourceMetricsLabelKey, metricsLabels)...)
 		metricsLabels[values.ResourceTypeLabelKey] = string(corev1.ResourceMemory)
 		ch <- prometheus.MustNewConstMetric(nodeResourceUsageDesc,
-			prometheus.GaugeValue, memory, utils.ConvertPrometheusLabelValuesInOrder(resourceMetricsLabelKey, metricsLabels)...)
+			prometheus.GaugeValue, node.MemoryUsage, utils.ConvertPrometheusLabelValuesInOrder(resourceMetricsLabelKey, metricsLabels)...)
 	}
 }
 
@@ -306,9 +300,9 @@ func (n *nodeMetricsCollector) collectNodeResourceMetrics(ch chan<- prometheus.M
 			allocatable := n.nodeResouece[node.Name].allocatableResource[corev1.ResourceCPU]
 			requested := n.nodeResouece[node.Name].requestedResource[corev1.ResourceCPU]
 
-			resourceSystemTaken := nodeCostInfo.CPUCore - utils.ConvertQualityToCore(allocatable)
+			resourceSystemTaken := nodeCostInfo.CPUCore - utils.ConvertQualityToCore(&allocatable)
 			allocatable.Sub(requested)
-			resoruceAvailable := utils.ConvertQualityToCore(allocatable)
+			resoruceAvailable := utils.ConvertQualityToCore(&allocatable)
 
 			ch <- prometheus.MustNewConstMetric(nodeResourceSystemTakenDesc,
 				prometheus.GaugeValue, resourceSystemTaken, utils.ConvertPrometheusLabelValuesInOrder(resourceMetricsLabelKey, metricsLabels)...)
@@ -326,9 +320,9 @@ func (n *nodeMetricsCollector) collectNodeResourceMetrics(ch chan<- prometheus.M
 			allocatable := n.nodeResouece[node.Name].allocatableResource[corev1.ResourceMemory]
 			requested := n.nodeResouece[node.Name].requestedResource[corev1.ResourceMemory]
 
-			resourceSystemTaken := nodeCostInfo.RamGiB - utils.ConvertQualityToGiB(allocatable)
+			resourceSystemTaken := nodeCostInfo.RamGiB - utils.ConvertQualityToGiB(&allocatable)
 			allocatable.Sub(requested)
-			resoruceAvailable := utils.ConvertQualityToGiB(allocatable)
+			resoruceAvailable := utils.ConvertQualityToGiB(&allocatable)
 
 			ch <- prometheus.MustNewConstMetric(nodeResourceSystemTakenDesc,
 				prometheus.GaugeValue, resourceSystemTaken, utils.ConvertPrometheusLabelValuesInOrder(resourceMetricsLabelKey, metricsLabels)...)
@@ -357,14 +351,16 @@ func (n *nodeMetricsCollector) getNodeCostInfo(nodeName string) (*api.InstancePr
 func RegisterNodeLevelMetricsCollection(agentOptions *options.AgentOptions,
 	client *versioned.Clientset,
 	provider cloudprice.CloudProviderInterface,
-	coreResourceInformerLister *api.CoreResourceInformerLister) {
+	coreResourceInformerLister *api.CoreResourceInformerLister,
+	usageMetricsCache *metricscache.ClusterResourceUsageMetricsCache) {
 	nodeMetricsCollector := &nodeMetricsCollector{
-		clusterName:   agentOptions.ClusterName,
-		clusterId:     agentOptions.ClusterId,
-		metricsClient: client,
-		provider:      provider,
-		nodeLister:    coreResourceInformerLister.NodeLister,
-		nodeResouece:  make(map[string]nodeResourceInfo),
+		clusterName:       agentOptions.ClusterName,
+		clusterId:         agentOptions.ClusterId,
+		metricsClient:     client,
+		usageMetricsCache: usageMetricsCache,
+		provider:          provider,
+		nodeLister:        coreResourceInformerLister.NodeLister,
+		nodeResouece:      make(map[string]nodeResourceInfo),
 	}
 
 	nodeMetricsCollector.registerNodeResourceEventHandler(coreResourceInformerLister)

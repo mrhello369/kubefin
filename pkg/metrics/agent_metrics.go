@@ -24,6 +24,7 @@ import (
 	"github.com/kubefin/kubefin/cmd/kubefin-agent/app/options"
 	"github.com/kubefin/kubefin/pkg/api"
 	"github.com/kubefin/kubefin/pkg/cloudprice"
+	metricscache "github.com/kubefin/kubefin/pkg/metrics/cache"
 	"github.com/kubefin/kubefin/pkg/metrics/core"
 )
 
@@ -32,8 +33,13 @@ func RegisterAgentMetricsCollector(ctx context.Context,
 	coreResourceInformerLister *api.CoreResourceInformerLister,
 	provider cloudprice.CloudProviderInterface,
 	metricsClientSet *versioned.Clientset) {
+	usageMetricsCache := metricscache.NewClusterResoruceUsageMetricsCache(ctx, options, metricsClientSet)
 	core.RegisterClusterLevelMetricsCollection(options, metricsClientSet, provider, coreResourceInformerLister)
-	core.RegisterPodLevelMetricsCollection(options, metricsClientSet, provider, coreResourceInformerLister)
-	core.RegisterNodeLevelMetricsCollection(options, metricsClientSet, provider, coreResourceInformerLister)
-	core.RegisterWorkloadLevelMetricsCollection(options, metricsClientSet, provider, coreResourceInformerLister)
+	core.RegisterPodLevelMetricsCollection(options, metricsClientSet, provider, coreResourceInformerLister, usageMetricsCache)
+	core.RegisterNodeLevelMetricsCollection(options, metricsClientSet, provider, coreResourceInformerLister, usageMetricsCache)
+	core.RegisterWorkloadLevelMetricsCollection(options, metricsClientSet, provider, coreResourceInformerLister, usageMetricsCache)
+
+	go func() {
+		usageMetricsCache.Start()
+	}()
 }

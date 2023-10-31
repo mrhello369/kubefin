@@ -55,7 +55,7 @@ func NewAgentOptions() *AgentOptions {
 			RenewDeadline:     metav1.Duration{Duration: values.DefaultRenewDeadline},
 			RetryPeriod:       metav1.Duration{Duration: values.DefaultRetryPeriod},
 		},
-		ScrapMetricsInterval:   time.Second,
+		ScrapMetricsInterval:   values.DefaultMetricsQueryPeriod,
 		LeaderElectionID:       os.Getenv(values.LeaderElectionIDEnv),
 		CloudProvider:          os.Getenv(values.CloudProviderEnv),
 		ClusterName:            os.Getenv(values.ClusterNameEnv),
