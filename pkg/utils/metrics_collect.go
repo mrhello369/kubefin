@@ -20,7 +20,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 	v12 "k8s.io/client-go/listers/core/v1"
 	"k8s.io/klog/v2"
-	"k8s.io/metrics/pkg/apis/metrics/v1beta1"
 
 	"github.com/kubefin/kubefin/pkg/cloudprice"
 	"github.com/kubefin/kubefin/pkg/values"
@@ -39,44 +38,6 @@ func ParsePodResourceRequest(Containers []v1.Container) (cpu, ram map[string]flo
 		cpu[container.Name] += float64(container.Resources.Requests.Cpu().MilliValue()) / values.CoreInMCore
 		ram[container.Name] += float64(container.Resources.Requests.Memory().Value()) / values.GBInBytes
 	}
-	return
-}
-
-func ParsePodResourceUsage(Containers []v1beta1.ContainerMetrics) (cpu, ram map[string]float64) {
-	cpu = make(map[string]float64)
-	ram = make(map[string]float64)
-	for _, container := range Containers {
-		if _, ok := cpu[container.Name]; !ok {
-			cpu[container.Name] = 0.0
-		}
-		if _, ok := ram[container.Name]; !ok {
-			ram[container.Name] = 0.0
-		}
-		cpu[container.Name] += float64(container.Usage.Cpu().MilliValue()) / values.CoreInMCore
-		ram[container.Name] += float64(container.Usage.Memory().Value()) / values.GBInBytes
-	}
-	return
-}
-
-func ParseNodeResourceUsage(metrics v1beta1.NodeMetrics) (cpu, memory float64) {
-	cpu = float64(metrics.Usage.Cpu().MilliValue()) / values.CoreInMCore
-	memory = float64(metrics.Usage.Memory().Value()) / values.GBInBytes
-	return
-}
-
-func ParseResourceList(list v1.ResourceList) (cpu, memory float64) {
-	if len(list) == 0 {
-		return 0, 0
-	}
-	for resourceType, resourceValue := range list {
-		switch resourceType {
-		case v1.ResourceCPU:
-			cpu += float64(resourceValue.MilliValue()) / values.CoreInMCore
-		case v1.ResourceMemory:
-			memory += float64(resourceValue.Value()) / values.GBInBytes
-		}
-	}
-
 	return
 }
 

@@ -22,12 +22,14 @@ const (
 	KubeFinNamespace = "kubefin"
 	KubeFinAgentName = "kubefin-agent"
 
-	// DefaultLeaseDuration is the defaultcloud LeaseDuration for leader election.
+	// DefaultLeaseDuration is the LeaseDuration for leader election.
 	DefaultLeaseDuration = 15 * time.Second
-	// DefaultRenewDeadline is the defaultcloud RenewDeadline for leader election.
+	// DefaultRenewDeadline is the RenewDeadline for leader election.
 	DefaultRenewDeadline = 10 * time.Second
-	// DefaultRetryPeriod is the defaultcloud RetryPeriod for leader election.
+	// DefaultRetryPeriod is the RetryPeriod for leader election.
 	DefaultRetryPeriod = 5 * time.Second
+	// DefaultMetricsQueryPeriod is the period to query usage metrics.
+	DefaultMetricsQueryPeriod = 15 * time.Second
 
 	LostConnectionTimeoutThreshold = time.Minute * 3 / time.Second
 

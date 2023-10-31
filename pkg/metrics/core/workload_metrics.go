@@ -17,7 +17,6 @@ limitations under the License.
 package core
 
 import (
-	"context"
 	"encoding/json"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -33,6 +32,7 @@ import (
 	"github.com/kubefin/kubefin/cmd/kubefin-agent/app/options"
 	"github.com/kubefin/kubefin/pkg/api"
 	"github.com/kubefin/kubefin/pkg/cloudprice"
+	metricscache "github.com/kubefin/kubefin/pkg/metrics/cache"
 	"github.com/kubefin/kubefin/pkg/utils"
 	"github.com/kubefin/kubefin/pkg/values"
 )
@@ -77,8 +77,9 @@ type workloadMetricsCollector struct {
 	clusterName string
 	clusterId   string
 
-	metricsClient *versioned.Clientset
-	provider      cloudprice.CloudProviderInterface
+	metricsClient     *versioned.Clientset
+	usageMetricsCache *metricscache.ClusterResourceUsageMetricsCache
+	provider          cloudprice.CloudProviderInterface
 
 	podLister         listercorev1.PodLister
 	nodeLister        listercorev1.NodeLister
@@ -196,27 +197,24 @@ func (w *workloadMetricsCollector) collectDaemonSetRequestMetrics(ds *appsv1.Dae
 
 func (w *workloadMetricsCollector) collectDaemonSetUsageMetrics(ds *appsv1.DaemonSet, selector labels.Selector,
 	labels prometheus.Labels, ch chan<- prometheus.Metric) {
-	pods, err := w.metricsClient.MetricsV1beta1().PodMetricses(ds.Namespace).List(context.TODO(), metav1.ListOptions{
-		LabelSelector: selector.String(),
-	})
+	podsList, err := w.podLister.List(selector)
 	if err != nil {
-		klog.Errorf("List all pod metrics error:%v, kubernetes metrics server may not be installed", err)
+		klog.Errorf("List daemonset(%s/%s) pod error:%v", ds.Namespace, ds.Name, err)
 		return
 	}
+	pods := w.usageMetricsCache.QueryWorkloadsUsageByPods(podsList...)
 	cpuTotalUsage, memoryTotalUsage := map[string]float64{}, map[string]float64{}
-	for _, pod := range pods.Items {
-		cpu, ram := utils.ParsePodResourceUsage(pod.Containers)
-		for containerName, value := range cpu {
-			if _, ok := cpuTotalUsage[containerName]; !ok {
-				cpuTotalUsage[containerName] = 0
+	for _, pod := range pods {
+		for _, ctrInfo := range pod.ContainersUsage {
+			if _, ok := cpuTotalUsage[ctrInfo.ResourceName]; !ok {
+				cpuTotalUsage[ctrInfo.ResourceName] = 0
 			}
-			cpuTotalUsage[containerName] += value
-		}
-		for containerName, value := range ram {
-			if _, ok := memoryTotalUsage[containerName]; !ok {
-				memoryTotalUsage[containerName] = 0
+			if _, ok := memoryTotalUsage[ctrInfo.ResourceName]; !ok {
+				memoryTotalUsage[ctrInfo.ResourceName] = 0
 			}
-			memoryTotalUsage[containerName] += value
+			cpuTotalUsage[ctrInfo.ResourceName] += ctrInfo.CPUUsage
+			memoryTotalUsage[ctrInfo.ResourceName] += ctrInfo.MemoryUsage
+
 		}
 	}
 
@@ -352,27 +350,23 @@ func (w *workloadMetricsCollector) collectStatefulSetRequestMetrics(sf *appsv1.S
 
 func (w *workloadMetricsCollector) collectStatefulSetUsageMetrics(sf *appsv1.StatefulSet, selector labels.Selector,
 	labels prometheus.Labels, ch chan<- prometheus.Metric) {
-	pods, err := w.metricsClient.MetricsV1beta1().PodMetricses(sf.Namespace).List(context.TODO(), metav1.ListOptions{
-		LabelSelector: selector.String(),
-	})
+	podsList, err := w.podLister.List(selector)
 	if err != nil {
-		klog.Errorf("List all pod metrics error:%v, kubernetes metrics server may not be installed", err)
+		klog.Errorf("List statefulset(%s/%s) pods error:%v", sf.Namespace, sf.Name, err)
 		return
 	}
+	pods := w.usageMetricsCache.QueryWorkloadsUsageByPods(podsList...)
 	cpuTotalUsage, memoryTotalUsage := map[string]float64{}, map[string]float64{}
-	for _, pod := range pods.Items {
-		cpu, ram := utils.ParsePodResourceUsage(pod.Containers)
-		for containerName, value := range cpu {
-			if _, ok := cpuTotalUsage[containerName]; !ok {
-				cpuTotalUsage[containerName] = 0
+	for _, pod := range pods {
+		for _, ctrInfo := range pod.ContainersUsage {
+			if _, ok := cpuTotalUsage[ctrInfo.ResourceName]; !ok {
+				cpuTotalUsage[ctrInfo.ResourceName] = 0
 			}
-			cpuTotalUsage[containerName] += value
-		}
-		for containerName, value := range ram {
-			if _, ok := memoryTotalUsage[containerName]; !ok {
-				memoryTotalUsage[containerName] = 0
+			if _, ok := memoryTotalUsage[ctrInfo.ResourceName]; !ok {
+				memoryTotalUsage[ctrInfo.ResourceName] = 0
 			}
-			memoryTotalUsage[containerName] += value
+			cpuTotalUsage[ctrInfo.ResourceName] += ctrInfo.CPUUsage
+			memoryTotalUsage[ctrInfo.ResourceName] += ctrInfo.MemoryUsage
 		}
 	}
 
@@ -505,27 +499,23 @@ func (w *workloadMetricsCollector) collectDeploymentRequestMetrics(dm *appsv1.De
 
 func (w *workloadMetricsCollector) collectDeploymentUsageMetrics(dm *appsv1.Deployment, selector labels.Selector,
 	labels prometheus.Labels, ch chan<- prometheus.Metric) {
-	pods, err := w.metricsClient.MetricsV1beta1().PodMetricses(dm.Namespace).List(context.TODO(), metav1.ListOptions{
-		LabelSelector: selector.String(),
-	})
+	podsList, err := w.podLister.List(selector)
 	if err != nil {
-		klog.Errorf("List all pod metrics error:%v, kubernetes metrics server may not be installed", err)
+		klog.Errorf("List deployment(%s/%s) pods error:%v", dm.Namespace, dm.Name, err)
 		return
 	}
+	pods := w.usageMetricsCache.QueryWorkloadsUsageByPods(podsList...)
 	cpuTotalUsage, memoryTotalUsage := map[string]float64{}, map[string]float64{}
-	for _, pod := range pods.Items {
-		cpu, ram := utils.ParsePodResourceUsage(pod.Containers)
-		for containerName, value := range cpu {
-			if _, ok := cpuTotalUsage[containerName]; !ok {
-				cpuTotalUsage[containerName] = 0
+	for _, pod := range pods {
+		for _, ctrInfo := range pod.ContainersUsage {
+			if _, ok := cpuTotalUsage[ctrInfo.ResourceName]; !ok {
+				cpuTotalUsage[ctrInfo.ResourceName] = 0
 			}
-			cpuTotalUsage[containerName] += value
-		}
-		for containerName, value := range ram {
-			if _, ok := memoryTotalUsage[containerName]; !ok {
-				memoryTotalUsage[containerName] = 0
+			if _, ok := memoryTotalUsage[ctrInfo.ResourceName]; !ok {
+				memoryTotalUsage[ctrInfo.ResourceName] = 0
 			}
-			memoryTotalUsage[containerName] += value
+			cpuTotalUsage[ctrInfo.ResourceName] += ctrInfo.CPUUsage
+			memoryTotalUsage[ctrInfo.ResourceName] += ctrInfo.MemoryUsage
 		}
 	}
 
@@ -565,11 +555,13 @@ func (w *workloadMetricsCollector) collectDeploymentCostMetrics(dm *appsv1.Deplo
 func RegisterWorkloadLevelMetricsCollection(agentOptions *options.AgentOptions,
 	client *versioned.Clientset,
 	provider cloudprice.CloudProviderInterface,
-	coreResourceInformerLister *api.CoreResourceInformerLister) {
+	coreResourceInformerLister *api.CoreResourceInformerLister,
+	usageMetricsCache *metricscache.ClusterResourceUsageMetricsCache) {
 	workloadMetricsCollector := &workloadMetricsCollector{
 		clusterId:         agentOptions.ClusterId,
 		clusterName:       agentOptions.ClusterName,
 		metricsClient:     client,
+		usageMetricsCache: usageMetricsCache,
 		provider:          provider,
 		podLister:         coreResourceInformerLister.PodLister,
 		nodeLister:        coreResourceInformerLister.NodeLister,
