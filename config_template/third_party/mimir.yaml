@@ -22,6 +22,11 @@ spec:
         image: grafana/mimir:2.6.0
         imagePullPolicy: IfNotPresent
         name: mimir
+        env:
+          - name: MY_POD_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
         ports:
           - containerPort: 9009
             name: http
