@@ -55,3 +55,7 @@ data:
     # 2.https://grafana.com/docs/mimir/latest/references/configuration-parameters/
     frontend:
       max_outstanding_per_tenant: 4096
+
+    memberlist:
+      bind_addr:
+      - ${MY_POD_IP}
