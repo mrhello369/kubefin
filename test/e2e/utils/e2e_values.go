@@ -28,6 +28,7 @@ const (
 	AllClusterCostsSummaryPath      = "/api/v1/costs/summary"
 	SpecificClusterCostsSummaryPath = "/api/v1/costs/clusters/%s/summary"
 
-	SpecificClusterComputeCostsPath  = "/api/v1/costs/clusters/%s/compute"
-	SpecificClusterWorkloadCostsPath = "/api/v1/costs/clusters/%s/workload"
+	SpecificClusterResourceCostsPath  = "/api/v1/costs/clusters/%s/resource"
+	SpecificClusterWorkloadCostsPath  = "/api/v1/costs/clusters/%s/workload"
+	SpecificClusterNamespaceCostsPath = "/api/v1/costs/clusters/%s/namespace"
 )

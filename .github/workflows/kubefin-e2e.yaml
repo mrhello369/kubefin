@@ -63,8 +63,15 @@ jobs:
         kubectl port-forward -nkubefin svc/kubefin-cost-analyzer-service --kubeconfig=${HOME}/.kube/kubefin-server.config --address='0.0.0.0' 8080 3000 &
         sleep 300
 
-        # TODO: Now, we use this API call to check the basic information, e2e is needed in the future
-        curl http://localhost:8080/api/v1/metrics/summary
+    - name: E2E Test
+      run: |
+        set -x
+
+        gotestsum --format testname -- \
+          -race -count=1 -parallel=1 -tags=e2e -v \
+          -timeout=30m \
+          -short \
+          ./test/e2e
 
     - name: Set kubeconfig path
       if: ${{ failure() }}
