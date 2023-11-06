@@ -40,7 +40,7 @@ spec:
       - name: kubefin-agent
         # This is the Go import path for the binary that is containerized
         # and substituted here.
-        image: {KUBEFIN_AGENT_IAMGE}
+        image: {KUBEFIN_AGENT_IMAGE}
         args:
           - --v=4 # debug level log
         resources:
