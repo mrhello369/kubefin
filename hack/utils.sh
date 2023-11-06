@@ -41,7 +41,7 @@ function init_primary_config() {
   cp -r config_template config_primary
 
   sed -i'' -e "s/{REMOTE_WRITE_ADDRESS}/http:\/\/mimir.kubefin.svc.cluster.local:9009\/api\/v1\/push/g" config_primary/core/configmap/otel.yaml
-  sed -i'' -e "s/{KUBEFIN_AGENT_IAMGE}/ko:\/\/github.com\/kubefin\/kubefin\/cmd\/kubefin-agent/g" config_primary/core/deployments/kubefin-agent.yaml
+  sed -i'' -e "s/{KUBEFIN_AGENT_IMAGE}/ko:\/\/github.com\/kubefin\/kubefin\/cmd\/kubefin-agent/g" config_primary/core/deployments/kubefin-agent.yaml
   sed -i'' -e "s/{CLOUD_PROVIDER}/${cloud_provider}/g" config_primary/core/deployments/kubefin-agent.yaml
   sed -i'' -e "s/{CLUSTER_ID}//g" config_primary/core/deployments/kubefin-agent.yaml
   sed -i'' -e "s/{CLUSTER_NAME}/${cluster_name}/g" config_primary/core/deployments/kubefin-agent.yaml
@@ -61,7 +61,7 @@ function init_secondary_config() {
   rm -rf config_secondary/core/deployments/kubefin-cost-analyzer.yaml
 
   sed -i'' -e "s/{REMOTE_WRITE_ADDRESS}/${metrics_push_addr}/g" config_secondary/core/configmap/otel.yaml
-  sed -i'' -e "s/{KUBEFIN_AGENT_IAMGE}/ko:\/\/github.com\/kubefin\/kubefin\/cmd\/kubefin-agent/g" config_secondary/core/deployments/kubefin-agent.yaml
+  sed -i'' -e "s/{KUBEFIN_AGENT_IMAGE}/ko:\/\/github.com\/kubefin\/kubefin\/cmd\/kubefin-agent/g" config_secondary/core/deployments/kubefin-agent.yaml
   sed -i'' -e "s/{CLOUD_PROVIDER}/${cloud_provider}/g" config_secondary/core/deployments/kubefin-agent.yaml
   sed -i'' -e "s/{CLUSTER_ID}//g" config_secondary/core/deployments/kubefin-agent.yaml
   sed -i'' -e "s/{CLUSTER_NAME}/${cluster_name}/g" config_secondary/core/deployments/kubefin-agent.yaml
@@ -83,4 +83,12 @@ function echo_info() {
 
 function echo_note() {
   echo -e "\033[33m$1\033[0m"
+}
+
+function cmd_must_exist {
+    local CMD=$(command -v ${1})
+    if [[ ! -x ${CMD} ]]; then
+      echo "Please install ${1} and verify they are in \$PATH."
+      exit 1
+    fi
 }

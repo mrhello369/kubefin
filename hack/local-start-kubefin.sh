@@ -31,6 +31,13 @@ function cleanup() {
 
 trap cleanup EXIT SIGINT
 
+# check necessary tools
+cmd_must_exist "go"
+cmd_must_exist "kind"
+cmd_must_exist "docker"
+cmd_must_exist "ko"
+cmd_must_exist "kubectl"
+
 # setup kind cluster
 echo_info "Start to setup kind cluster..."
 clusters=$(kind get clusters)
@@ -74,11 +81,11 @@ export KIND_CLUSTER_NAME=kubefin-server
 export KUBECONFIG=${HOME}/.kube/kubefin-server.config
 ko apply -Rf config_primary --platform="${SYS_ARCH}"
 
-server_node_ip=$(get_mimir_server_ip "${HOME}"/.kube/kubefin-server.config)
-server_node_port=$(get_mimir_server_port "${HOME}"/.kube/kubefin-server.config)
-
 echo_info "Wait mimir to be ready..."
 kubectl wait --for=condition=Ready pod -nkubefin mimir-0 --kubeconfig="${HOME}"/.kube/kubefin-server.config --timeout=600s
+
+server_node_ip=$(get_mimir_server_ip "${HOME}"/.kube/kubefin-server.config)
+server_node_port=$(get_mimir_server_port "${HOME}"/.kube/kubefin-server.config)
 
 # Setup secondary cluster
 echo_info "Start to setup secondary cluster..."
