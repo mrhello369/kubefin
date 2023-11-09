@@ -7,8 +7,8 @@ export class WorkloadCost {
       podCount,
       cpuCoreRequest,
       cpuCoreUsage,
-      ramGBRequest,
-      ramGBUsage,
+      ramGiBRequest,
+      ramGiBUsage,
     ) {
       this.namespace = namespace ? namespace : "-";
       this.workloadType = workloadType ? workloadType : "-";
@@ -17,7 +17,7 @@ export class WorkloadCost {
       this.podCount = podCount ? podCount : 0;
       this.cpuCoreRequest = cpuCoreRequest ? cpuCoreRequest : 0;
       this.cpuCoreUsage = cpuCoreUsage ? cpuCoreUsage : 0;
-      this.ramGBRequest = ramGBRequest ? ramGBRequest : 0;
-      this.ramGBUsage = ramGBUsage ? ramGBUsage : 0;
+      this.ramGiBRequest = ramGiBRequest ? ramGiBRequest : 0;
+      this.ramGiBUsage = ramGiBUsage ? ramGiBUsage : 0;
     }
   }

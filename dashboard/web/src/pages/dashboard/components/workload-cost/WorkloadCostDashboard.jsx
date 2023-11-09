@@ -43,8 +43,8 @@ export function WorkloadCostDashboard(props) {
     podCount: item.podCount,
     cpuCoreRequest: item.cpuCoreRequest,
     cpuCoreUsage: item.cpuCoreUsage,
-    ramGBRequest: item.ramGBRequest,
-    ramGBUsage: item.ramGBUsage,
+    ramGiBRequest: item.ramGiBRequest,
+    ramGiBUsage: item.ramGiBUsage,
   }));
 
   const navHeader = { text: "Workload Cost", href: "#/" };

@@ -20,6 +20,8 @@ import (
 	appv1 "k8s.io/client-go/listers/apps/v1"
 	v1 "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
+
+	insightlister "github.com/kubefin/kubefin/pkg/generated/listers/insight/v1alpha1"
 )
 
 type InstancePriceInfo struct {
@@ -38,15 +40,17 @@ type InstancePriceInfo struct {
 }
 
 type CoreResourceInformerLister struct {
-	NodeInformer        cache.SharedIndexInformer
-	NamespaceInformer   cache.SharedIndexInformer
-	PodInformer         cache.SharedIndexInformer
-	DeploymentInformer  cache.SharedIndexInformer
-	StatefulSetInformer cache.SharedIndexInformer
-	DaemonSetInformer   cache.SharedIndexInformer
-	NodeLister          v1.NodeLister
-	PodLister           v1.PodLister
-	DeploymentLister    appv1.DeploymentLister
-	StatefulSetLister   appv1.StatefulSetLister
-	DaemonSetLister     appv1.DaemonSetLister
+	NodeInformer              cache.SharedIndexInformer
+	NamespaceInformer         cache.SharedIndexInformer
+	PodInformer               cache.SharedIndexInformer
+	DeploymentInformer        cache.SharedIndexInformer
+	StatefulSetInformer       cache.SharedIndexInformer
+	DaemonSetInformer         cache.SharedIndexInformer
+	CustomWorkloadCfgInformer cache.SharedIndexInformer
+	NodeLister                v1.NodeLister
+	PodLister                 v1.PodLister
+	DeploymentLister          appv1.DeploymentLister
+	StatefulSetLister         appv1.StatefulSetLister
+	DaemonSetLister           appv1.DaemonSetLister
+	CustomWorkloadCfgLister   insightlister.CustomAllocationConfigurationLister
 }

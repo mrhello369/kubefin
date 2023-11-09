@@ -25,6 +25,8 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
+	"k8s.io/client-go/discovery"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -38,7 +40,10 @@ import (
 	"github.com/kubefin/kubefin/cmd/kubefin-agent/app/options"
 	"github.com/kubefin/kubefin/pkg/api"
 	"github.com/kubefin/kubefin/pkg/cloudprice"
+	kubefinclient "github.com/kubefin/kubefin/pkg/generated/clientset/versioned"
+	kubefininformer "github.com/kubefin/kubefin/pkg/generated/informers/externalversions"
 	"github.com/kubefin/kubefin/pkg/metrics"
+	"github.com/kubefin/kubefin/pkg/metrics/types"
 )
 
 // NewAgentCommand creates a *cobra.Command object with defaultcloud parameters
@@ -85,9 +90,30 @@ func Run(ctx context.Context, opts *options.AgentOptions) error {
 	if err != nil {
 		return fmt.Errorf("find values for connect kube-apiserver error:%v", err)
 	}
-	clientSet, err := kubernetes.NewForConfig(config)
+	client, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		return fmt.Errorf("create client to connect kube-apiserver error:%v", err)
+	}
+	kubefinClient, err := kubefinclient.NewForConfig(config)
+	if err != nil {
+		return fmt.Errorf("create kubefin client to connect kube-apiserver error:%v", err)
+	}
+	dynamicClient, err := dynamic.NewForConfig(config)
+	if err != nil {
+		klog.Fatalf("create dynamic client to connect kube-apiserver error:%v", err)
+	}
+	metricsClient, err := metricsv.NewForConfig(config)
+	if err != nil {
+		klog.Fatalf("create metrics client to connect kube-apiserver error:%v", err)
+	}
+	discoveryClient, err := discovery.NewDiscoveryClientForConfig(config)
+	if err != nil {
+		klog.Fatalf("create discovery client to connect kube-apiserver error:%v", err)
+	}
+	metricsClientList := &types.MetricsClientList{
+		MetricsClient:   metricsClient,
+		DiscoveryClient: discoveryClient,
+		DynamicClient:   dynamicClient,
 	}
 
 	server := &http.Server{
@@ -95,11 +121,7 @@ func Run(ctx context.Context, opts *options.AgentOptions) error {
 	}
 	runFunc := func(runCtx context.Context) {
 		// TODO: Support pull metrics from API, and ensure the requests will go to the right pod
-		metricsClientSet, err := metricsv.NewForConfig(config)
-		if err != nil {
-			klog.Fatalf("create metrics client to connect kube-apiserver error:%v", err)
-		}
-		provider, err := cloudprice.NewCloudProvider(clientSet, opts)
+		provider, err := cloudprice.NewCloudProvider(client, opts)
 		if err != nil {
 			klog.Fatalf("Create cloud provider error:%v", err)
 		}
@@ -107,18 +129,24 @@ func Run(ctx context.Context, opts *options.AgentOptions) error {
 			klog.Fatalf("Parse cluster info error:%v", err)
 		}
 
-		factory := informers.NewSharedInformerFactory(clientSet, 0)
-		coreResourceInformerLister := getAllCoreResourceLister(factory)
-		metrics.RegisterAgentMetricsCollector(ctx, opts, coreResourceInformerLister, provider, metricsClientSet)
+		k8sFactory := informers.NewSharedInformerFactory(client, 0)
+		kubefinFactory := kubefininformer.NewSharedInformerFactory(kubefinClient, 0)
+		coreResourceInformerLister := getAllCoreResourceLister(k8sFactory, kubefinFactory)
+		metrics.RegisterAgentMetricsCollector(ctx, opts, coreResourceInformerLister, provider, metricsClientList)
 
 		stopCh := ctx.Done()
-		factory.Start(stopCh)
+		k8sFactory.Start(stopCh)
+		kubefinFactory.Start(stopCh)
 
-		klog.Infof("Wait node cache sync...")
+		klog.Infof("Wait resource cache sync...")
 		if ok := cache.WaitForCacheSync(stopCh,
-			coreResourceInformerLister.NamespaceInformer.HasSynced,
 			coreResourceInformerLister.NodeInformer.HasSynced,
-			coreResourceInformerLister.PodInformer.HasSynced); !ok {
+			coreResourceInformerLister.NamespaceInformer.HasSynced,
+			coreResourceInformerLister.PodInformer.HasSynced,
+			coreResourceInformerLister.DeploymentInformer.HasSynced,
+			coreResourceInformerLister.StatefulSetInformer.HasSynced,
+			coreResourceInformerLister.DaemonSetInformer.HasSynced,
+			coreResourceInformerLister.CustomWorkloadCfgInformer.HasSynced); !ok {
 			klog.Fatalf("wait core resource cache sync failed")
 		}
 
@@ -137,7 +165,7 @@ func Run(ctx context.Context, opts *options.AgentOptions) error {
 		defer cancel()
 		server.Shutdown(ctx)
 	}
-	if err := runLeaderElection(ctx, clientSet, opts, runFunc, stopFun); err != nil {
+	if err := runLeaderElection(ctx, client, opts, runFunc, stopFun); err != nil {
 		return fmt.Errorf("run leader election error:%v", err)
 	}
 
@@ -175,20 +203,24 @@ func runLeaderElection(ctx context.Context, clientset kubernetes.Interface,
 	return nil
 }
 
-func getAllCoreResourceLister(factory informers.SharedInformerFactory) *api.CoreResourceInformerLister {
-	coreResource := factory.Core().V1()
-	appsResource := factory.Apps().V1()
+func getAllCoreResourceLister(k8sFactory informers.SharedInformerFactory,
+	kubfinFactory kubefininformer.SharedInformerFactory) *api.CoreResourceInformerLister {
+	coreResource := k8sFactory.Core().V1()
+	appsResource := k8sFactory.Apps().V1()
+	kubefinResource := kubfinFactory.Insight().V1alpha1()
 	return &api.CoreResourceInformerLister{
-		NodeInformer:        coreResource.Nodes().Informer(),
-		NamespaceInformer:   coreResource.Namespaces().Informer(),
-		PodInformer:         coreResource.Pods().Informer(),
-		DeploymentInformer:  appsResource.Deployments().Informer(),
-		StatefulSetInformer: appsResource.StatefulSets().Informer(),
-		DaemonSetInformer:   appsResource.DaemonSets().Informer(),
-		NodeLister:          coreResource.Nodes().Lister(),
-		PodLister:           coreResource.Pods().Lister(),
-		DeploymentLister:    appsResource.Deployments().Lister(),
-		StatefulSetLister:   appsResource.StatefulSets().Lister(),
-		DaemonSetLister:     appsResource.DaemonSets().Lister(),
+		NodeInformer:              coreResource.Nodes().Informer(),
+		NamespaceInformer:         coreResource.Namespaces().Informer(),
+		PodInformer:               coreResource.Pods().Informer(),
+		DeploymentInformer:        appsResource.Deployments().Informer(),
+		StatefulSetInformer:       appsResource.StatefulSets().Informer(),
+		DaemonSetInformer:         appsResource.DaemonSets().Informer(),
+		CustomWorkloadCfgInformer: kubefinResource.CustomAllocationConfigurations().Informer(),
+		NodeLister:                coreResource.Nodes().Lister(),
+		PodLister:                 coreResource.Pods().Lister(),
+		DeploymentLister:          appsResource.Deployments().Lister(),
+		StatefulSetLister:         appsResource.StatefulSets().Lister(),
+		DaemonSetLister:           appsResource.DaemonSets().Lister(),
+		CustomWorkloadCfgLister:   kubefinResource.CustomAllocationConfigurations().Lister(),
 	}
 }

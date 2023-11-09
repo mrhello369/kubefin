@@ -21,7 +21,6 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	v1 "k8s.io/client-go/listers/core/v1"
 	"k8s.io/klog/v2"
-	"k8s.io/metrics/pkg/client/clientset/versioned"
 
 	"github.com/kubefin/kubefin/cmd/kubefin-agent/app/options"
 	"github.com/kubefin/kubefin/pkg/api"
@@ -80,7 +79,6 @@ func (c *clusterStateMetricsCollector) Collect(ch chan<- prometheus.Metric) {
 }
 
 func RegisterClusterLevelMetricsCollection(agentOptions *options.AgentOptions,
-	client *versioned.Clientset,
 	provider cloudprice.CloudProviderInterface,
 	coreResourceInformerLister *api.CoreResourceInformerLister) {
 	clusterStateMetricsCollector := &clusterStateMetricsCollector{

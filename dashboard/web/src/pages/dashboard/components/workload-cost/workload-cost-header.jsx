@@ -39,8 +39,8 @@ export function WorkloadCostHeader(props) {
               element.costList[0].podCount,
               element.costList[0].cpuCoreRequest,
               element.costList[0].cpuCoreUsage,
-              element.costList[0].ramGBRequest,
-              element.costList[0].ramGBUsage,
+              element.costList[0].ramGiBRequest,
+              element.costList[0].ramGiBUsage,
             )
           )
         );

@@ -24,7 +24,6 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	v1 "k8s.io/client-go/listers/core/v1"
 	"k8s.io/klog/v2"
-	"k8s.io/metrics/pkg/client/clientset/versioned"
 
 	"github.com/kubefin/kubefin/cmd/kubefin-agent/app/options"
 	"github.com/kubefin/kubefin/pkg/api"
@@ -73,7 +72,6 @@ type podMetricsCollector struct {
 	clusterId   string
 	clusterName string
 
-	metricsClient     *versioned.Clientset
 	usageMetricsCache *metricscache.ClusterResourceUsageMetricsCache
 	provider          cloudprice.CloudProviderInterface
 
@@ -179,14 +177,12 @@ func (p *podMetricsCollector) CollectPodResourceUsage(ch chan<- prometheus.Metri
 }
 
 func RegisterPodLevelMetricsCollection(agentOptions *options.AgentOptions,
-	client *versioned.Clientset,
 	provider cloudprice.CloudProviderInterface,
 	coreResourceInformerLister *api.CoreResourceInformerLister,
 	usageMetricsCache *metricscache.ClusterResourceUsageMetricsCache) {
 	podMetricsCollector := &podMetricsCollector{
 		clusterId:         agentOptions.ClusterId,
 		clusterName:       agentOptions.ClusterName,
-		metricsClient:     client,
 		usageMetricsCache: usageMetricsCache,
 		provider:          provider,
 		podLister:         coreResourceInformerLister.PodLister,
