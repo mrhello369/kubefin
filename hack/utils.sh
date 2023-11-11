@@ -92,3 +92,21 @@ function cmd_must_exist {
       exit 1
     fi
 }
+
+function create_gopath_tree() {
+  # $1: the root path of repo
+  local repo_root=$1
+  # $2: go path
+  local go_path=$2
+
+  local kubefin_go_package="github.com/kubefin/kubefin"
+
+  local go_pkg_dir="${go_path}/src/${kubefin_go_package}"
+  go_pkg_dir=$(dirname "${go_pkg_dir}")
+
+  mkdir -p "${go_pkg_dir}"
+
+  if [[ ! -e "${go_pkg_dir}" || "$(readlink "${go_pkg_dir}")" != "${repo_root}" ]]; then
+    ln -snf "${repo_root}" "${go_pkg_dir}"
+  fi
+}

@@ -1,0 +1,96 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.13.0
+  labels:
+    kubefin.dev/crd-install: "true"
+  name: customallocationconfigurations.insight.kubefin.dev
+spec:
+  group: insight.kubefin.dev
+  names:
+    categories:
+    - kubefin-dev
+    kind: CustomAllocationConfiguration
+    listKind: CustomAllocationConfigurationList
+    plural: customallocationconfigurations
+    shortNames:
+    - cac
+    singular: customallocationconfiguration
+  scope: Cluster
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: CustomAllocationConfiguration represents the custom allocation
+          insight configuration. It could be used to view the cost/resource allocation
+          of various resources.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: Spec represents how to collect different CR resource/cost
+              allocation metrics
+            properties:
+              workloadsAllocation:
+                description: WorkloadsAllocation represents the list of workload allocation
+                  configurations
+                items:
+                  properties:
+                    podLabelSelectorExtract:
+                      description: PodLabelSelectorExtract represents the way used
+                        to extract the labels to find the corresponding pods of the
+                        workload
+                      properties:
+                        script:
+                          description: Script represents the lua script used to extract
+                            the labels to find the corresponding pods of the workload
+                          type: string
+                      required:
+                      - script
+                      type: object
+                    target:
+                      description: Target represents the target resources kind of
+                        the workload
+                      properties:
+                        apiVersion:
+                          description: APIVersion represents the API version of the
+                            target resources.
+                          type: string
+                        kind:
+                          description: Kind represents the Kind of the target resources.
+                          type: string
+                      required:
+                      - apiVersion
+                      - kind
+                      type: object
+                    workloadTypeAlias:
+                      description: WorkloadTypeAlias represents the alias of the workload
+                        type
+                      type: string
+                  required:
+                  - podLabelSelectorExtract
+                  - target
+                  - workloadTypeAlias
+                  type: object
+                minItems: 1
+                type: array
+            required:
+            - workloadsAllocation
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true

@@ -27,7 +27,6 @@ import (
 	v1 "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/klog/v2"
-	"k8s.io/metrics/pkg/client/clientset/versioned"
 
 	"github.com/kubefin/kubefin/cmd/kubefin-agent/app/options"
 	"github.com/kubefin/kubefin/pkg/api"
@@ -101,7 +100,6 @@ type nodeMetricsCollector struct {
 	clusterName string
 	clusterId   string
 
-	metricsClient     *versioned.Clientset
 	usageMetricsCache *metricscache.ClusterResourceUsageMetricsCache
 	provider          cloudprice.CloudProviderInterface
 	nodeLister        v1.NodeLister
@@ -349,14 +347,12 @@ func (n *nodeMetricsCollector) getNodeCostInfo(nodeName string) (*api.InstancePr
 }
 
 func RegisterNodeLevelMetricsCollection(agentOptions *options.AgentOptions,
-	client *versioned.Clientset,
 	provider cloudprice.CloudProviderInterface,
 	coreResourceInformerLister *api.CoreResourceInformerLister,
 	usageMetricsCache *metricscache.ClusterResourceUsageMetricsCache) {
 	nodeMetricsCollector := &nodeMetricsCollector{
 		clusterName:       agentOptions.ClusterName,
 		clusterId:         agentOptions.ClusterId,
-		metricsClient:     client,
 		usageMetricsCache: usageMetricsCache,
 		provider:          provider,
 		nodeLister:        coreResourceInformerLister.NodeLister,

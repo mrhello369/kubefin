@@ -18,12 +18,11 @@ kind: ClusterRole
 metadata:
   name: kubefin-cluster-role
 rules:
-  - apiGroups: [""]
-    resources: ["pods", "namespaces", "nodes"]
-    verbs: ["get", "list", "watch"]
-  - apiGroups: ["apps"]
-    resources: ["deployments", "statefulsets", "daemonsets"]
-    verbs: ["get", "list", "watch"]
-  - apiGroups: [ "metrics.k8s.io" ]
-    resources: [ "nodes", "pods" ]
-    verbs: [ "get", "list", "watch" ]
+  - apiGroups:
+    - "*"
+    resources:
+    - "*"
+    verbs:
+    - get
+    - list
+    - watch

@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/kubefin/kubefin/cmd/kubefin-agent/app/options"
+	"github.com/kubefin/kubefin/pkg/metrics/types"
 	"github.com/kubefin/kubefin/pkg/utils"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -55,10 +56,10 @@ type ClusterResourceUsageMetricsCache struct {
 
 func NewClusterResoruceUsageMetricsCache(ctx context.Context,
 	agentOptions *options.AgentOptions,
-	client *versioned.Clientset) *ClusterResourceUsageMetricsCache {
+	metricsClientList *types.MetricsClientList) *ClusterResourceUsageMetricsCache {
 	return &ClusterResourceUsageMetricsCache{
 		ctx:           ctx,
-		metricsClient: client,
+		metricsClient: metricsClientList.MetricsClient,
 		options:       agentOptions,
 		podMutex:      sync.RWMutex{},
 		podsUsage:     []PodUsageMetric{},

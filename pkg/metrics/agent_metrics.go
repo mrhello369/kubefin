@@ -19,25 +19,24 @@ package metrics
 import (
 	"context"
 
-	"k8s.io/metrics/pkg/client/clientset/versioned"
-
 	"github.com/kubefin/kubefin/cmd/kubefin-agent/app/options"
 	"github.com/kubefin/kubefin/pkg/api"
 	"github.com/kubefin/kubefin/pkg/cloudprice"
 	metricscache "github.com/kubefin/kubefin/pkg/metrics/cache"
 	"github.com/kubefin/kubefin/pkg/metrics/core"
+	"github.com/kubefin/kubefin/pkg/metrics/types"
 )
 
 func RegisterAgentMetricsCollector(ctx context.Context,
 	options *options.AgentOptions,
 	coreResourceInformerLister *api.CoreResourceInformerLister,
 	provider cloudprice.CloudProviderInterface,
-	metricsClientSet *versioned.Clientset) {
-	usageMetricsCache := metricscache.NewClusterResoruceUsageMetricsCache(ctx, options, metricsClientSet)
-	core.RegisterClusterLevelMetricsCollection(options, metricsClientSet, provider, coreResourceInformerLister)
-	core.RegisterPodLevelMetricsCollection(options, metricsClientSet, provider, coreResourceInformerLister, usageMetricsCache)
-	core.RegisterNodeLevelMetricsCollection(options, metricsClientSet, provider, coreResourceInformerLister, usageMetricsCache)
-	core.RegisterWorkloadLevelMetricsCollection(options, metricsClientSet, provider, coreResourceInformerLister, usageMetricsCache)
+	metricsClientList *types.MetricsClientList) {
+	usageMetricsCache := metricscache.NewClusterResoruceUsageMetricsCache(ctx, options, metricsClientList)
+	core.RegisterClusterLevelMetricsCollection(options, provider, coreResourceInformerLister)
+	core.RegisterPodLevelMetricsCollection(options, provider, coreResourceInformerLister, usageMetricsCache)
+	core.RegisterNodeLevelMetricsCollection(options, provider, coreResourceInformerLister, usageMetricsCache)
+	core.RegisterWorkloadLevelMetricsCollection(options, provider, coreResourceInformerLister, usageMetricsCache, metricsClientList)
 
 	go func() {
 		usageMetricsCache.Start()

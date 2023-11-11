@@ -79,6 +79,8 @@ hack/init-primary-config.sh auto kubefin-server true "devel"
 
 export KIND_CLUSTER_NAME=kubefin-server
 export KUBECONFIG=${HOME}/.kube/kubefin-server.config
+ko apply --selector kubefin.dev/crd-install=true -Rf config_primary
+kubectl wait --for=condition=Established --all crd
 ko apply -Rf config_primary --platform="${SYS_ARCH}"
 
 echo_info "Wait mimir to be ready..."
@@ -93,6 +95,8 @@ hack/init-secondary-config.sh auto cluster-1 http://"${server_node_ip}:${server_
 
 export KIND_CLUSTER_NAME=cluster-1
 export KUBECONFIG=${HOME}/.kube/cluster-1.config
+ko apply --selector kubefin.dev/crd-install=true -Rf config_secondary
+kubectl wait --for=condition=Established --all crd
 ko apply -Rf config_secondary --platform="${SYS_ARCH}"
 
 echo_info "Wait KubeFin get ready..."

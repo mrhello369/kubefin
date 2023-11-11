@@ -152,6 +152,7 @@ func parsePodResourceRequest(podWorkloadCost map[string]map[int64]*api.ClusterWo
 		item, ok := podWorkloadCost[pod]
 		if !ok {
 			podWorkloadCost[pod] = make(map[int64]*api.ClusterWorkloadCostDetail)
+			item = podWorkloadCost[pod]
 		}
 		for timeStamp, v := range details {
 			if _, ok := item[timeStamp]; !ok {
@@ -169,6 +170,7 @@ func parsePodResourceRequest(podWorkloadCost map[string]map[int64]*api.ClusterWo
 		item, ok := podWorkloadCost[pod]
 		if !ok {
 			podWorkloadCost[pod] = make(map[int64]*api.ClusterWorkloadCostDetail)
+			item = podWorkloadCost[pod]
 		}
 		for timeStamp, v := range details {
 			if _, ok := item[timeStamp]; !ok {
@@ -189,6 +191,7 @@ func parsePodResourceUsage(podWorkloadCost map[string]map[int64]*api.ClusterWork
 		item, ok := podWorkloadCost[pod]
 		if !ok {
 			podWorkloadCost[pod] = make(map[int64]*api.ClusterWorkloadCostDetail)
+			item = podWorkloadCost[pod]
 		}
 		for timeStamp, v := range details {
 			if _, ok := item[timeStamp]; !ok {
@@ -206,6 +209,7 @@ func parsePodResourceUsage(podWorkloadCost map[string]map[int64]*api.ClusterWork
 		item, ok := podWorkloadCost[pod]
 		if !ok {
 			podWorkloadCost[pod] = make(map[int64]*api.ClusterWorkloadCostDetail)
+			item = podWorkloadCost[pod]
 		}
 		for timeStamp, v := range details {
 			if _, ok := item[timeStamp]; !ok {
@@ -301,7 +305,7 @@ func queryPodResourceUsage(tenantId, clusterId string,
 func queryHighLevelWorkloadCostsWithTimeRange(tenantId, clusterId string, start, end, stepSeconds int64, aggregateBy string) ([]*api.ClusterWorkloadCost, error) {
 	queryRe := aggregateBy
 	if aggregateBy == api.AggregateByAll {
-		queryRe = "deployment|statefulset|daemonset"
+		queryRe = ".*"
 	}
 
 	var totalCosts map[string]map[int64]float64
@@ -369,6 +373,7 @@ func parseHighLevelWorkloadPodCount(workloadCost map[string]map[int64]*api.Clust
 		item, ok := workloadCost[workload]
 		if !ok {
 			workloadCost[workload] = make(map[int64]*api.ClusterWorkloadCostDetail)
+			item = workloadCost[workload]
 		}
 		for timeStamp, v := range details {
 			if _, ok := item[timeStamp]; !ok {
@@ -388,6 +393,7 @@ func parseHighLevelWorkloadResourceRequest(workloadCost map[string]map[int64]*ap
 		item, ok := workloadCost[workload]
 		if !ok {
 			workloadCost[workload] = make(map[int64]*api.ClusterWorkloadCostDetail)
+			item = workloadCost[workload]
 		}
 		for timeStamp, v := range details {
 			if _, ok := item[timeStamp]; !ok {
@@ -403,6 +409,7 @@ func parseHighLevelWorkloadResourceRequest(workloadCost map[string]map[int64]*ap
 		item, ok := workloadCost[workload]
 		if !ok {
 			workloadCost[workload] = make(map[int64]*api.ClusterWorkloadCostDetail)
+			item = workloadCost[workload]
 		}
 		for timeStamp, v := range details {
 			if _, ok := item[timeStamp]; !ok {
@@ -422,6 +429,7 @@ func parseHighLevelWorkloadResourceUsage(workloadCost map[string]map[int64]*api.
 		item, ok := workloadCost[workload]
 		if !ok {
 			workloadCost[workload] = make(map[int64]*api.ClusterWorkloadCostDetail)
+			item = workloadCost[workload]
 		}
 		for timeStamp, v := range details {
 			if _, ok := item[timeStamp]; !ok {
@@ -437,6 +445,7 @@ func parseHighLevelWorkloadResourceUsage(workloadCost map[string]map[int64]*api.
 		item, ok := workloadCost[workload]
 		if !ok {
 			workloadCost[workload] = make(map[int64]*api.ClusterWorkloadCostDetail)
+			item = workloadCost[workload]
 		}
 		for timeStamp, v := range details {
 			if _, ok := item[timeStamp]; !ok {

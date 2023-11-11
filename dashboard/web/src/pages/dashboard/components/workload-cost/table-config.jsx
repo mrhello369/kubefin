@@ -33,7 +33,7 @@ export const COLUMN_DEFINITIONS_WORKLOAD = [
   {
     id: "memory",
     header: "Memory requested",
-    cell: (item) => keepThreeDecimal(item.ramGBRequest),
+    cell: (item) => keepThreeDecimal(item.ramGiBRequest),
     sortingField: "memory",
   },
   {
