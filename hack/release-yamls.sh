@@ -29,6 +29,7 @@ hack/init-primary-config.sh auto cluster-0 true "${TAG}"
 
 # Generated KubeFin component YAML files
 readonly KUBEFIN_YAML=${YAML_OUTPUT_DIR}/kubefin.yaml
+readonly KUBEFIN_CRD_YAML=${YAML_OUTPUT_DIR}/kubefin_crd.yaml
 
 # Flags for all ko commands
 # In order to push image to dockerhub, we use flag '-B' to ignore some parts
@@ -60,5 +61,6 @@ rm -rf config_primary/third_party/grafana.yaml
 echo "Building KubeFin"
 ko resolve ${KO_YAML_FLAGS} -t ${TAG} --tag-only -B -R -f config_primary/core/ | "${LABEL_YAML_CMD[@]}" > "${KUBEFIN_YAML}"
 ko resolve ${KO_YAML_FLAGS} -t ${TAG} --tag-only -B -R -f config_primary/third_party/ | "${LABEL_YAML_CMD[@]}" >> "${KUBEFIN_YAML}"
+ko resolve ${KO_YAML_FLAGS} -t ${TAG} --tag-only -B -R -f config_primary/crds | "${LABEL_YAML_CMD[@]}" > "${KUBEFIN_CRD_YAML}"
 
 echo "All manifests are generated"
