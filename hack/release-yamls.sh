@@ -28,8 +28,9 @@ rm -fr ${YAML_OUTPUT_DIR}/*.yaml
 hack/init-primary-config.sh auto cluster-0 true "${TAG}"
 
 # Generated KubeFin component YAML files
-readonly KUBEFIN_YAML=${YAML_OUTPUT_DIR}/kubefin.yaml
-readonly KUBEFIN_CRD_YAML=${YAML_OUTPUT_DIR}/kubefin_crd.yaml
+readonly KUBEFIN_CRD_YAML=${YAML_OUTPUT_DIR}/kubefin-crd.yaml
+readonly KUBEFIN_PRIMARY_YAML=${YAML_OUTPUT_DIR}/kubefin-primary.yaml
+readonly KUBEFIN_SECONDARY_YAML=${YAML_OUTPUT_DIR}/kubefin-secondary.yaml
 
 # Flags for all ko commands
 # In order to push image to dockerhub, we use flag '-B' to ignore some parts
@@ -59,8 +60,9 @@ cd "${YAML_REPO_ROOT}"
 rm -rf config_primary/third_party/grafana.yaml
 
 echo "Building KubeFin"
-ko resolve ${KO_YAML_FLAGS} -t ${TAG} --tag-only -B -R -f config_primary/core/ | "${LABEL_YAML_CMD[@]}" > "${KUBEFIN_YAML}"
-ko resolve ${KO_YAML_FLAGS} -t ${TAG} --tag-only -B -R -f config_primary/third_party/ | "${LABEL_YAML_CMD[@]}" >> "${KUBEFIN_YAML}"
 ko resolve ${KO_YAML_FLAGS} -t ${TAG} --tag-only -B -R -f config_primary/crds | "${LABEL_YAML_CMD[@]}" > "${KUBEFIN_CRD_YAML}"
+ko resolve ${KO_YAML_FLAGS} -t ${TAG} --tag-only -B -R -f config_primary/core/200-roles/,config_primary/core/300-customworkloadinsight/,config_primary/core/configmap/,config_primary/core/deployments/kubefin-agent.yaml,config_primary/core/100-namespace.yaml,config_primary/core/200-serviceaccount.yaml | "${LABEL_YAML_CMD[@]}" >> "${KUBEFIN_SECONDARY_YAML}"
+ko resolve ${KO_YAML_FLAGS} -t ${TAG} --tag-only -B -R -f config_primary/core/ | "${LABEL_YAML_CMD[@]}" > "${KUBEFIN_PRIMARY_YAML}"
+
 
 echo "All manifests are generated"

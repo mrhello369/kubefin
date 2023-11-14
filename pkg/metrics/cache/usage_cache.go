@@ -54,7 +54,7 @@ type ClusterResourceUsageMetricsCache struct {
 	nodesUsage []ResourceUsageMetric
 }
 
-func NewClusterResoruceUsageMetricsCache(ctx context.Context,
+func NewClusterResourceUsageMetricsCache(ctx context.Context,
 	agentOptions *options.AgentOptions,
 	metricsClientList *types.MetricsClientList) *ClusterResourceUsageMetricsCache {
 	return &ClusterResourceUsageMetricsCache{
