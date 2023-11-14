@@ -32,7 +32,7 @@ func RegisterAgentMetricsCollector(ctx context.Context,
 	coreResourceInformerLister *api.CoreResourceInformerLister,
 	provider cloudprice.CloudProviderInterface,
 	metricsClientList *types.MetricsClientList) {
-	usageMetricsCache := metricscache.NewClusterResoruceUsageMetricsCache(ctx, options, metricsClientList)
+	usageMetricsCache := metricscache.NewClusterResourceUsageMetricsCache(ctx, options, metricsClientList)
 	core.RegisterClusterLevelMetricsCollection(options, provider, coreResourceInformerLister)
 	core.RegisterPodLevelMetricsCollection(options, provider, coreResourceInformerLister, usageMetricsCache)
 	core.RegisterNodeLevelMetricsCollection(options, provider, coreResourceInformerLister, usageMetricsCache)
