@@ -247,16 +247,16 @@ const docTemplate = `{
                 }
             }
         },
-        "/metrics/clusters/{cluster_id}/cpu": {
+        "/resources/clusters/{cluster_id}/cpu": {
             "get": {
-                "description": "Get specific cluster CPU metrics",
+                "description": "Get specific cluster CPU resources metrics",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Metrics"
+                    "Resources"
                 ],
-                "summary": "Get specific cluster CPU metrics",
+                "summary": "Get specific cluster CPU resources metrics",
                 "parameters": [
                     {
                         "type": "string",
@@ -300,16 +300,16 @@ const docTemplate = `{
                 }
             }
         },
-        "/metrics/clusters/{cluster_id}/memory": {
+        "/resources/clusters/{cluster_id}/memory": {
             "get": {
-                "description": "Get specific cluster memory metrics",
+                "description": "Get specific cluster memory resources metrics",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Metrics"
+                    "Resources"
                 ],
-                "summary": "Get specific cluster memory metrics",
+                "summary": "Get specific cluster memory resources metrics",
                 "parameters": [
                     {
                         "type": "string",
@@ -353,16 +353,16 @@ const docTemplate = `{
                 }
             }
         },
-        "/metrics/clusters/{cluster_id}/summary": {
+        "/resources/clusters/{cluster_id}/summary": {
             "get": {
-                "description": "Get specific cluster metrics summary in current two month",
+                "description": "Get specific cluster resources summary in current two month",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Metrics"
+                    "Resources"
                 ],
-                "summary": "Get specific cluster metrics summary",
+                "summary": "Get specific cluster resources summary",
                 "parameters": [
                     {
                         "type": "string",
@@ -376,7 +376,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_kubefin_kubefin_pkg_api.ClusterMetricsSummary"
+                            "$ref": "#/definitions/github_com_kubefin_kubefin_pkg_api.ClusterResourcesSummary"
                         }
                     },
                     "500": {
@@ -388,21 +388,21 @@ const docTemplate = `{
                 }
             }
         },
-        "/metrics/summary": {
+        "/resources/summary": {
             "get": {
-                "description": "Get all clusters metrics summary in current two month",
+                "description": "Get all clusters resources summary in current two month",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Metrics"
+                    "resources"
                 ],
-                "summary": "Get all clusters metrics summary",
+                "summary": "Get all clusters resources summary",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_kubefin_kubefin_pkg_api.ClusterMetricsSummaryList"
+                            "$ref": "#/definitions/github_com_kubefin_kubefin_pkg_api.ClusterResourcesSummaryList"
                         }
                     },
                     "500": {
@@ -471,113 +471,6 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/github_com_kubefin_kubefin_pkg_api.ClusterCostsSummary"
-                    }
-                }
-            }
-        },
-        "github_com_kubefin_kubefin_pkg_api.ClusterMetricsSummary": {
-            "type": "object",
-            "properties": {
-                "cloudProvider": {
-                    "type": "string"
-                },
-                "clusterActiveTime": {
-                    "description": "ClusterActiveTime shows the cluster active time in seconds",
-                    "type": "number"
-                },
-                "clusterConnectionSate": {
-                    "description": "ClusterConnectionSate can be running/connect_failed",
-                    "type": "string"
-                },
-                "clusterId": {
-                    "type": "string"
-                },
-                "clusterName": {
-                    "type": "string"
-                },
-                "clusterRegion": {
-                    "type": "string"
-                },
-                "connectionTime": {
-                    "description": "ConnectionTime shows the time the cluster connected",
-                    "type": "integer"
-                },
-                "cpuCoreAvailable": {
-                    "description": "CPUCoreAvailable means all nodes' available cpu core",
-                    "type": "number"
-                },
-                "cpuCoreRequest": {
-                    "description": "CPUCoreRequest means all pods' cpu core request",
-                    "type": "number"
-                },
-                "cpuCoreSystemTaken": {
-                    "description": "CPUCoreSystemTaken means the cpu taken by system",
-                    "type": "number"
-                },
-                "cpuCoreTotal": {
-                    "description": "CPUCoreTotal means all nodes' cpu core",
-                    "type": "number"
-                },
-                "cpuCoreUsage": {
-                    "description": "CPUCoreUsage means all pods' cpu core usage",
-                    "type": "number"
-                },
-                "fallbackBillingNodeNumbersCurrent": {
-                    "type": "integer"
-                },
-                "lastActiveTime": {
-                    "type": "integer"
-                },
-                "nodeNumbersCurrent": {
-                    "type": "integer"
-                },
-                "onDemandBillingNodeNumbersCurrent": {
-                    "type": "integer"
-                },
-                "periodBillingNodeNumbersCurrent": {
-                    "type": "integer"
-                },
-                "podScheduledCurrent": {
-                    "type": "integer"
-                },
-                "podTotalCurrent": {
-                    "type": "integer"
-                },
-                "podUnscheduledCurrent": {
-                    "type": "integer"
-                },
-                "ramGiBAvailable": {
-                    "description": "RAMGiBAvailable means all nodes' available ram GiB",
-                    "type": "number"
-                },
-                "ramGiBRequest": {
-                    "description": "RAMGiBRequest all pods' ram GiB request",
-                    "type": "number"
-                },
-                "ramGiBSystemTaken": {
-                    "description": "RAMGiBSystemTaken means the rm taken by system",
-                    "type": "number"
-                },
-                "ramGiBTotal": {
-                    "description": "RAMGiBTotal means all nodes' ram GiB",
-                    "type": "number"
-                },
-                "ramGiBUsage": {
-                    "description": "RAMGiBUsage means all pods' ram GiB usage",
-                    "type": "number"
-                },
-                "spotBillingNodeNumbersCurrent": {
-                    "type": "integer"
-                }
-            }
-        },
-        "github_com_kubefin_kubefin_pkg_api.ClusterMetricsSummaryList": {
-            "type": "object",
-            "properties": {
-                "items": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_kubefin_kubefin_pkg_api.ClusterMetricsSummary"
                     }
                 }
             }
@@ -739,6 +632,113 @@ const docTemplate = `{
                 },
                 "unit": {
                     "type": "string"
+                }
+            }
+        },
+        "github_com_kubefin_kubefin_pkg_api.ClusterResourcesSummary": {
+            "type": "object",
+            "properties": {
+                "cloudProvider": {
+                    "type": "string"
+                },
+                "clusterActiveTime": {
+                    "description": "ClusterActiveTime shows the cluster active time in seconds",
+                    "type": "number"
+                },
+                "clusterConnectionSate": {
+                    "description": "ClusterConnectionSate can be running/connect_failed",
+                    "type": "string"
+                },
+                "clusterId": {
+                    "type": "string"
+                },
+                "clusterName": {
+                    "type": "string"
+                },
+                "clusterRegion": {
+                    "type": "string"
+                },
+                "connectionTime": {
+                    "description": "ConnectionTime shows the time the cluster connected",
+                    "type": "integer"
+                },
+                "cpuCoreAvailable": {
+                    "description": "CPUCoreAvailable means all nodes' available cpu core",
+                    "type": "number"
+                },
+                "cpuCoreRequest": {
+                    "description": "CPUCoreRequest means all pods' cpu core request",
+                    "type": "number"
+                },
+                "cpuCoreSystemTaken": {
+                    "description": "CPUCoreSystemTaken means the cpu taken by system",
+                    "type": "number"
+                },
+                "cpuCoreTotal": {
+                    "description": "CPUCoreTotal means all nodes' cpu core",
+                    "type": "number"
+                },
+                "cpuCoreUsage": {
+                    "description": "CPUCoreUsage means all pods' cpu core usage",
+                    "type": "number"
+                },
+                "fallbackBillingNodeNumbersCurrent": {
+                    "type": "integer"
+                },
+                "lastActiveTime": {
+                    "type": "integer"
+                },
+                "nodeNumbersCurrent": {
+                    "type": "integer"
+                },
+                "onDemandBillingNodeNumbersCurrent": {
+                    "type": "integer"
+                },
+                "periodBillingNodeNumbersCurrent": {
+                    "type": "integer"
+                },
+                "podScheduledCurrent": {
+                    "type": "integer"
+                },
+                "podTotalCurrent": {
+                    "type": "integer"
+                },
+                "podUnscheduledCurrent": {
+                    "type": "integer"
+                },
+                "ramGiBAvailable": {
+                    "description": "RAMGiBAvailable means all nodes' available ram GiB",
+                    "type": "number"
+                },
+                "ramGiBRequest": {
+                    "description": "RAMGiBRequest all pods' ram GiB request",
+                    "type": "number"
+                },
+                "ramGiBSystemTaken": {
+                    "description": "RAMGiBSystemTaken means the rm taken by system",
+                    "type": "number"
+                },
+                "ramGiBTotal": {
+                    "description": "RAMGiBTotal means all nodes' ram GiB",
+                    "type": "number"
+                },
+                "ramGiBUsage": {
+                    "description": "RAMGiBUsage means all pods' ram GiB usage",
+                    "type": "number"
+                },
+                "spotBillingNodeNumbersCurrent": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_kubefin_kubefin_pkg_api.ClusterResourcesSummaryList": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_kubefin_kubefin_pkg_api.ClusterResourcesSummary"
+                    }
                 }
             }
         },

@@ -19,11 +19,11 @@ package utils
 const (
 	E2ETestEndpoint = "http://127.0.0.1:8080"
 
-	AllClusterMetricsSummaryPath      = "/api/v1/metrics/summary"
-	SpecificClusterMetricsSummaryPath = "/api/v1/metrics/clusters/%s/summary"
+	AllClusterMetricsSummaryPath      = "/api/v1/resources/summary"
+	SpecificClusterMetricsSummaryPath = "/api/v1/resources/clusters/%s/summary"
 
-	SpecificClusterCPUMetricsPath    = "/api/v1/metrics/clusters/%s/cpu"
-	SpecificClusterMemoryMetricsPath = "/api/v1/metrics/clusters/%s/memory"
+	SpecificClusterCPUMetricsPath    = "/api/v1/resources/clusters/%s/cpu"
+	SpecificClusterMemoryMetricsPath = "/api/v1/resources/clusters/%s/memory"
 
 	AllClusterCostsSummaryPath      = "/api/v1/costs/summary"
 	SpecificClusterCostsSummaryPath = "/api/v1/costs/clusters/%s/summary"
