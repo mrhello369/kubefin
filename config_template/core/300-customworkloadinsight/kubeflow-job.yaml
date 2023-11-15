@@ -1,0 +1,98 @@
+# Copyright 2023 The KubeFin Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: insight.kubefin.dev/v1alpha1
+kind: CustomAllocationConfiguration
+metadata:
+  name: kubeflow
+spec:
+  workloadsAllocation:
+    - workloadTypeAlias: tfjob
+      target:
+        apiVersion: kubeflow.org/v1
+        kind: TFJob
+      podLabelSelectorExtract:
+        # lua script
+        script: |
+          function ExtractPodLabelSelector (observedObj)
+            labelSelector = {}
+            labelSelector["training.kubeflow.org/operator-name"] = "tfjob-controller"
+            labelSelector["training.kubeflow.org/job-name"] = observedObj.metadata.name
+            return labelSelector
+          end
+    - workloadTypeAlias: paddlejob
+      target:
+        apiVersion: kubeflow.org/v1
+        kind: PaddleJob
+      podLabelSelectorExtract:
+        # lua script
+        script: |
+          function ExtractPodLabelSelector (observedObj)
+            labelSelector = {}
+            labelSelector["training.kubeflow.org/operator-name"] = "paddlejob-controller"
+            labelSelector["training.kubeflow.org/job-name"] = observedObj.metadata.name
+            return labelSelector
+          end
+    - workloadTypeAlias: pytorchjob
+      target:
+        apiVersion: kubeflow.org/v1
+        kind: PyTorchJob
+      podLabelSelectorExtract:
+        # lua script
+        script: |
+          function ExtractPodLabelSelector (observedObj)
+            labelSelector = {}
+            labelSelector["training.kubeflow.org/operator-name"] = "pytorchjob-controller"
+            labelSelector["training.kubeflow.org/job-name"] = observedObj.metadata.name
+            return labelSelector
+          end
+    - workloadTypeAlias: mxjob
+      target:
+        apiVersion: kubeflow.org/v1
+        kind: MXJob
+      podLabelSelectorExtract:
+        # lua script
+        script: |
+          function ExtractPodLabelSelector (observedObj)
+            labelSelector = {}
+            labelSelector["training.kubeflow.org/operator-name"] = "mxjob-controller"
+            labelSelector["training.kubeflow.org/job-name"] = observedObj.metadata.name
+            return labelSelector
+          end
+    - workloadTypeAlias: xgboostjob
+      target:
+        apiVersion: kubeflow.org/v1
+        kind: XGBoostJob
+      podLabelSelectorExtract:
+        # lua script
+        script: |
+          function ExtractPodLabelSelector (observedObj)
+            labelSelector = {}
+            labelSelector["training.kubeflow.org/operator-name"] = "xgboostjob-controller"
+            labelSelector["training.kubeflow.org/job-name"] = observedObj.metadata.name
+            return labelSelector
+          end
+    - workloadTypeAlias: mpijob
+      target:
+        apiVersion: kubeflow.org/v2beta1
+        kind: MPIJob
+      podLabelSelectorExtract:
+        # lua script
+        script: |
+          function ExtractPodLabelSelector (observedObj)
+            labelSelector = {}
+            labelSelector["training.kubeflow.org/operator-name"] = "mpijob-controller"
+            labelSelector["training.kubeflow.org/job-name"] = observedObj.metadata.name
+            return labelSelector
+          end
