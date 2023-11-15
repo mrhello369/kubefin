@@ -69,8 +69,8 @@ type StandardInfoList struct {
 	Items []interface{} `json:"items"`
 }
 
-type ClusterMetricsSummaryList struct {
-	Items []ClusterMetricsSummary `json:"items"`
+type ClusterResourcesSummaryList struct {
+	Items []ClusterResourcesSummary `json:"items"`
 }
 
 type ClusterCostsSummaryList struct {
@@ -162,7 +162,7 @@ type ClusterNamespaceCostDetail struct {
 	TotalCost      float64 `json:"totalCost,omitempty"`
 }
 
-type ClusterMetricsSummary struct {
+type ClusterResourcesSummary struct {
 	ClusterBasicProperty
 	NodeNumbersCurrent                int64 `json:"nodeNumbersCurrent"`
 	OnDemandBillingNodeNumbersCurrent int64 `json:"onDemandBillingNodeNumbersCurrent,omitempty"`

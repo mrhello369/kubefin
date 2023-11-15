@@ -31,7 +31,7 @@ import (
 	"github.com/prometheus/common/model"
 )
 
-func QueryClusterMetricsSummaryWithTimeRange(tenantId, clusterId string,
+func QueryClusterResourcesSummaryWithTimeRange(tenantId, clusterId string,
 	resourceType v1.ResourceName, start, end, stepSeconds int64) (*api.ClusterResourceMetrics, error) {
 	var usage []model.SamplePair
 	var total []model.SamplePair
@@ -345,7 +345,7 @@ func ConvertToMultiClustersCostsList(clustersSummary map[string]*api.ClusterCost
 	return retList
 }
 
-func QueryAllClustersCurrentMetrics(tenantId string) (map[string]*api.ClusterMetricsSummary, error) {
+func QueryAllClustersCurrentMetrics(tenantId string) (map[string]*api.ClusterResourcesSummary, error) {
 	var nodesNumber map[string]map[string]int64
 	var podsNumber map[string]map[string]int64
 	var resourceTotal map[string]map[string]float64
@@ -400,7 +400,7 @@ func QueryAllClustersCurrentMetrics(tenantId string) (map[string]*api.ClusterMet
 		return nil, errors.NewAggregate(errs)
 	}
 
-	ret := make(map[string]*api.ClusterMetricsSummary)
+	ret := make(map[string]*api.ClusterResourcesSummary)
 	parseAllClustersNodesNumber(ret, nodesNumber)
 	parseAllClustersPodsNumber(ret, podsNumber)
 	parseAllClustersResourceTotal(ret, resourceTotal)
@@ -412,7 +412,7 @@ func QueryAllClustersCurrentMetrics(tenantId string) (map[string]*api.ClusterMet
 	return ret, nil
 }
 
-func parseAllClustersNodesNumber(data map[string]*api.ClusterMetricsSummary,
+func parseAllClustersNodesNumber(data map[string]*api.ClusterResourcesSummary,
 	nodesNumber map[string]map[string]int64) {
 	for clusterId, v := range nodesNumber {
 		totalNodes := int64(0)
@@ -427,7 +427,7 @@ func parseAllClustersNodesNumber(data map[string]*api.ClusterMetricsSummary,
 				spotNodes += int64(num)
 			}
 		}
-		data[clusterId] = &api.ClusterMetricsSummary{
+		data[clusterId] = &api.ClusterResourcesSummary{
 			NodeNumbersCurrent:                totalNodes,
 			OnDemandBillingNodeNumbersCurrent: ondemandNodes,
 			SpotBillingNodeNumbersCurrent:     spotNodes,
@@ -435,7 +435,7 @@ func parseAllClustersNodesNumber(data map[string]*api.ClusterMetricsSummary,
 	}
 }
 
-func parseAllClustersPodsNumber(data map[string]*api.ClusterMetricsSummary,
+func parseAllClustersPodsNumber(data map[string]*api.ClusterResourcesSummary,
 	podsNumber map[string]map[string]int64) {
 	for clusterId, v := range podsNumber {
 		podTotal := int64(0)
@@ -451,7 +451,7 @@ func parseAllClustersPodsNumber(data map[string]*api.ClusterMetricsSummary,
 			}
 		}
 		if _, ok := data[clusterId]; !ok {
-			data[clusterId] = &api.ClusterMetricsSummary{}
+			data[clusterId] = &api.ClusterResourcesSummary{}
 		}
 		data[clusterId].PodTotalCurrent = podTotal
 		data[clusterId].PodScheduledCurrent = podScheduled
@@ -459,7 +459,7 @@ func parseAllClustersPodsNumber(data map[string]*api.ClusterMetricsSummary,
 	}
 }
 
-func parseAllClustersResourceTotal(data map[string]*api.ClusterMetricsSummary,
+func parseAllClustersResourceTotal(data map[string]*api.ClusterResourcesSummary,
 	resourceTotal map[string]map[string]float64) {
 	for clusterId, v := range resourceTotal {
 		cpuTotal := float64(0.0)
@@ -473,14 +473,14 @@ func parseAllClustersResourceTotal(data map[string]*api.ClusterMetricsSummary,
 			}
 		}
 		if _, ok := data[clusterId]; !ok {
-			data[clusterId] = &api.ClusterMetricsSummary{}
+			data[clusterId] = &api.ClusterResourcesSummary{}
 		}
 		data[clusterId].CPUCoreTotal = cpuTotal
 		data[clusterId].RAMGiBTotal = ramTotal
 	}
 }
 
-func parseAllClustersResourceUsage(data map[string]*api.ClusterMetricsSummary,
+func parseAllClustersResourceUsage(data map[string]*api.ClusterResourcesSummary,
 	resourceUsage map[string]map[string]float64) {
 	for clusterId, v := range resourceUsage {
 		cpuUsage := float64(0.0)
@@ -494,14 +494,14 @@ func parseAllClustersResourceUsage(data map[string]*api.ClusterMetricsSummary,
 			}
 		}
 		if _, ok := data[clusterId]; !ok {
-			data[clusterId] = &api.ClusterMetricsSummary{}
+			data[clusterId] = &api.ClusterResourcesSummary{}
 		}
 		data[clusterId].CPUCoreUsage = cpuUsage
 		data[clusterId].RAMGiBUsage = ramUsage
 	}
 }
 
-func parseAllClustersResourceRequest(data map[string]*api.ClusterMetricsSummary,
+func parseAllClustersResourceRequest(data map[string]*api.ClusterResourcesSummary,
 	resourceRequest map[string]map[string]float64) {
 	for clusterId, v := range resourceRequest {
 		cpuRequest := float64(0.0)
@@ -515,14 +515,14 @@ func parseAllClustersResourceRequest(data map[string]*api.ClusterMetricsSummary,
 			}
 		}
 		if _, ok := data[clusterId]; !ok {
-			data[clusterId] = &api.ClusterMetricsSummary{}
+			data[clusterId] = &api.ClusterResourcesSummary{}
 		}
 		data[clusterId].CPUCoreRequest = cpuRequest
 		data[clusterId].RAMGiBRequest = ramRequest
 	}
 }
 
-func parseAllClustersResourceAvailable(data map[string]*api.ClusterMetricsSummary,
+func parseAllClustersResourceAvailable(data map[string]*api.ClusterResourcesSummary,
 	resourceAvailable map[string]map[string]float64) {
 	for clusterId, v := range resourceAvailable {
 		cpuAvailable := float64(0.0)
@@ -536,14 +536,14 @@ func parseAllClustersResourceAvailable(data map[string]*api.ClusterMetricsSummar
 			}
 		}
 		if _, ok := data[clusterId]; !ok {
-			data[clusterId] = &api.ClusterMetricsSummary{}
+			data[clusterId] = &api.ClusterResourcesSummary{}
 		}
 		data[clusterId].CPUCoreAvailable = cpuAvailable
 		data[clusterId].RAMGiBAvailable = ramAvailable
 	}
 }
 
-func parseAllClustersResourceSystemTaken(data map[string]*api.ClusterMetricsSummary,
+func parseAllClustersResourceSystemTaken(data map[string]*api.ClusterResourcesSummary,
 	resourceSystemTaken map[string]map[string]float64) {
 	for clusterId, v := range resourceSystemTaken {
 		cpuSystemTaken := float64(0.0)
@@ -557,7 +557,7 @@ func parseAllClustersResourceSystemTaken(data map[string]*api.ClusterMetricsSumm
 			}
 		}
 		if _, ok := data[clusterId]; !ok {
-			data[clusterId] = &api.ClusterMetricsSummary{}
+			data[clusterId] = &api.ClusterResourcesSummary{}
 		}
 		data[clusterId].CPUCoreSystemTaken = cpuSystemTaken
 		data[clusterId].RAMGiBSystemTaken = ramSystemTaken
@@ -694,7 +694,7 @@ func queryAllClustersResourceSystemTaken(tenantId string) (map[string]map[string
 	return resourceSystemTaken, nil
 }
 
-func ConvertToMultiClustersMetricsList(clusterMetrics map[string]*api.ClusterMetricsSummary, clustersProperty map[string]*api.ClusterBasicProperty) *api.ClusterMetricsSummaryList {
+func ConvertToMultiClustersResourcesList(clusterMetrics map[string]*api.ClusterResourcesSummary, clustersProperty map[string]*api.ClusterBasicProperty) *api.ClusterResourcesSummaryList {
 	for cluterId := range clusterMetrics {
 		if _, ok := clustersProperty[cluterId]; !ok {
 			klog.Warningf("Cluster basic information is not found:%s, ignore it", cluterId)
@@ -703,7 +703,7 @@ func ConvertToMultiClustersMetricsList(clusterMetrics map[string]*api.ClusterMet
 		clusterMetrics[cluterId].ClusterBasicProperty = *clustersProperty[cluterId]
 	}
 
-	retList := &api.ClusterMetricsSummaryList{}
+	retList := &api.ClusterResourcesSummaryList{}
 	for _, v := range clusterMetrics {
 		retList.Items = append(retList.Items, *v)
 	}
@@ -711,7 +711,7 @@ func ConvertToMultiClustersMetricsList(clusterMetrics map[string]*api.ClusterMet
 	return retList
 }
 
-func QueryClusterCurrentMetrics(tenantId, clusterId string) (*api.ClusterMetricsSummary, error) {
+func QueryClusterCurrentResources(tenantId, clusterId string) (*api.ClusterResourcesSummary, error) {
 	var nodesNumber map[string]int64
 	var podsNumber map[string]int64
 	var resourceTotal map[string]float64
@@ -765,7 +765,7 @@ func QueryClusterCurrentMetrics(tenantId, clusterId string) (*api.ClusterMetrics
 	if errors.NewAggregate(errs) != nil {
 		return nil, errors.NewAggregate(errs)
 	}
-	ret := &api.ClusterMetricsSummary{}
+	ret := &api.ClusterResourcesSummary{}
 	parseClusterNodesNumber(ret, nodesNumber)
 	parseClusterPodsNumber(ret, podsNumber)
 	parseClusterResourceTotal(ret, resourceTotal)
@@ -777,7 +777,7 @@ func QueryClusterCurrentMetrics(tenantId, clusterId string) (*api.ClusterMetrics
 	return ret, nil
 }
 
-func parseClusterNodesNumber(data *api.ClusterMetricsSummary, nodesNumber map[string]int64) {
+func parseClusterNodesNumber(data *api.ClusterResourcesSummary, nodesNumber map[string]int64) {
 	for billingMode, num := range nodesNumber {
 		data.NodeNumbersCurrent += int64(num)
 		switch billingMode {
@@ -789,7 +789,7 @@ func parseClusterNodesNumber(data *api.ClusterMetricsSummary, nodesNumber map[st
 	}
 }
 
-func parseClusterPodsNumber(data *api.ClusterMetricsSummary, podsNumber map[string]int64) {
+func parseClusterPodsNumber(data *api.ClusterResourcesSummary, podsNumber map[string]int64) {
 	for scheduled, num := range podsNumber {
 		data.PodTotalCurrent += int64(num)
 		switch scheduled {
@@ -801,7 +801,7 @@ func parseClusterPodsNumber(data *api.ClusterMetricsSummary, podsNumber map[stri
 	}
 }
 
-func parseClusterResourceTotal(data *api.ClusterMetricsSummary, resourceTotal map[string]float64) {
+func parseClusterResourceTotal(data *api.ClusterResourcesSummary, resourceTotal map[string]float64) {
 	for resourceType, num := range resourceTotal {
 		switch resourceType {
 		case "cpu":
@@ -812,7 +812,7 @@ func parseClusterResourceTotal(data *api.ClusterMetricsSummary, resourceTotal ma
 	}
 }
 
-func parseClusterResourceUsage(data *api.ClusterMetricsSummary, resourceUsage map[string]float64) {
+func parseClusterResourceUsage(data *api.ClusterResourcesSummary, resourceUsage map[string]float64) {
 	for resourceType, num := range resourceUsage {
 		switch resourceType {
 		case "cpu":
@@ -823,7 +823,7 @@ func parseClusterResourceUsage(data *api.ClusterMetricsSummary, resourceUsage ma
 	}
 }
 
-func parseClusterResourceRequest(data *api.ClusterMetricsSummary, resourceRequest map[string]float64) {
+func parseClusterResourceRequest(data *api.ClusterResourcesSummary, resourceRequest map[string]float64) {
 	for resourceType, num := range resourceRequest {
 		switch resourceType {
 		case "cpu":
@@ -834,7 +834,7 @@ func parseClusterResourceRequest(data *api.ClusterMetricsSummary, resourceReques
 	}
 }
 
-func parseClusterResourceAvailable(data *api.ClusterMetricsSummary, resourceAvailable map[string]float64) {
+func parseClusterResourceAvailable(data *api.ClusterResourcesSummary, resourceAvailable map[string]float64) {
 	for resourceType, num := range resourceAvailable {
 		switch resourceType {
 		case "cpu":
@@ -845,7 +845,7 @@ func parseClusterResourceAvailable(data *api.ClusterMetricsSummary, resourceAvai
 	}
 }
 
-func parseClusterResourceSystemTaken(data *api.ClusterMetricsSummary, resourceSystemTaken map[string]float64) {
+func parseClusterResourceSystemTaken(data *api.ClusterResourcesSummary, resourceSystemTaken map[string]float64) {
 	for resourceType, num := range resourceSystemTaken {
 		switch resourceType {
 		case "cpu":

@@ -31,11 +31,11 @@ import (
 	"github.com/kubefin/kubefin/pkg/values"
 )
 
-// ClusterCPUMetricsHandler      godoc
+// ClusterCPUResourcesHandler      godoc
 //
-//	@Summary		Get specific cluster CPU metrics
-//	@Description	Get specific cluster CPU metrics
-//	@Tags			Metrics
+//	@Summary		Get specific cluster CPU resources metrics
+//	@Description	Get specific cluster CPU resources metrics
+//	@Tags			Resources
 //	@Produce		json
 //	@Param			cluster_id	path		string	true	"Cluster Id"
 //	@Param			startTime	query		uint64	false	"The start time to query"
@@ -43,17 +43,17 @@ import (
 //	@Param			stepSeconds	query		uint64	false	"The step seconds of the data to return"
 //	@Success		200			{object}	api.ClusterResourceMetrics
 //	@Failure		500			{object}	api.StatusError
-//	@Router			/metrics/clusters/{cluster_id}/cpu [get]
-func ClusterCPUMetricsHandler(ctx *gin.Context) {
-	klog.Info("Start to query cluster CPU metrics")
-	clusterMetricsHandler(ctx, v1.ResourceCPU)
+//	@Router			/resources/clusters/{cluster_id}/cpu [get]
+func ClusterCPUResourcesHandler(ctx *gin.Context) {
+	klog.Info("Start to query cluster CPU resources metrics")
+	clusterResourcesHandler(ctx, v1.ResourceCPU)
 }
 
-// ClusterMemoryMetricsHandler   godoc
+// ClusterMemoryResourcesHandler   godoc
 //
-//	@Summary		Get specific cluster memory metrics
-//	@Description	Get specific cluster memory metrics
-//	@Tags			Metrics
+//	@Summary		Get specific cluster memory resources metrics
+//	@Description	Get specific cluster memory resources metrics
+//	@Tags			Resources
 //	@Produce		json
 //	@Param			cluster_id	path		string	true	"Cluster Id"
 //	@Param			startTime	query		uint64	false	"The start time to query"
@@ -61,13 +61,13 @@ func ClusterCPUMetricsHandler(ctx *gin.Context) {
 //	@Param			stepSeconds	query		uint64	false	"The step seconds of the data to return"
 //	@Success		200			{object}	api.ClusterResourceMetrics
 //	@Failure		500			{object}	api.StatusError
-//	@Router			/metrics/clusters/{cluster_id}/memory [get]
-func ClusterMemoryMetricsHandler(ctx *gin.Context) {
-	klog.Info("Start to query cluster Memory metrics")
-	clusterMetricsHandler(ctx, v1.ResourceMemory)
+//	@Router			/resources/clusters/{cluster_id}/memory [get]
+func ClusterMemoryResourcesHandler(ctx *gin.Context) {
+	klog.Info("Start to query cluster Memory resources metrics")
+	clusterResourcesHandler(ctx, v1.ResourceMemory)
 }
 
-func clusterMetricsHandler(ctx *gin.Context, resourceType v1.ResourceName) {
+func clusterResourcesHandler(ctx *gin.Context, resourceType v1.ResourceName) {
 	tenantId := utils.ParserTenantIdFromCtx(ctx)
 	startTime, endTime, stepSeconds, err := implementation.GetStartEndStepsTimeFromCtx(ctx, values.DefaultDetailStepSeconds)
 	if err != nil {
@@ -81,7 +81,7 @@ func clusterMetricsHandler(ctx *gin.Context, resourceType v1.ResourceName) {
 			api.QueryParaErrorStatus, api.QueryParaErrorReason, "")
 		return
 	}
-	clusterMemoryMetrics, err := implementation.QueryClusterMetricsSummaryWithTimeRange(tenantId, clusterId, resourceType, startTime, endTime, stepSeconds)
+	clusterMemoryMetrics, err := implementation.QueryClusterResourcesSummaryWithTimeRange(tenantId, clusterId, resourceType, startTime, endTime, stepSeconds)
 	if err != nil {
 		utils.ForwardStatusError(ctx, http.StatusInternalServerError,
 			api.QueryFailedStatus, api.QueryFailedReason, err.Error())

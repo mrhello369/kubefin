@@ -28,16 +28,16 @@ import (
 	"github.com/kubefin/kubefin/pkg/utils"
 )
 
-// ClustersMetricsSummaryHandler godoc
+// ClustersResourcesSummaryHandler godoc
 //
-//	@Summary		Get all clusters metrics summary
-//	@Description	Get all clusters metrics summary in current two month
-//	@Tags			Metrics
+//	@Summary		Get all clusters resources summary
+//	@Description	Get all clusters resources summary in current two month
+//	@Tags			resources
 //	@Produce		json
-//	@Success		200	{object}	api.ClusterMetricsSummaryList
+//	@Success		200	{object}	api.ClusterResourcesSummaryList
 //	@Failure		500	{object}	api.StatusError
-//	@Router			/metrics/summary [get]
-func ClustersMetricsSummaryHandler(ctx *gin.Context) {
+//	@Router			/resources/summary [get]
+func ClustersResourcesSummaryHandler(ctx *gin.Context) {
 	klog.Infof("Start to query clusters metrics summary")
 	tenantId := utils.ParserTenantIdFromCtx(ctx)
 	// If data not comes up in two-month period, we will ignore it
@@ -54,7 +54,7 @@ func ClustersMetricsSummaryHandler(ctx *gin.Context) {
 			api.QueryFailedStatus, api.QueryFailedReason, err.Error())
 		return
 	}
-	summaries := implementation.ConvertToMultiClustersMetricsList(allClustersSummary, allClustersProperty)
+	summaries := implementation.ConvertToMultiClustersResourcesList(allClustersSummary, allClustersProperty)
 	bodyBytes, err := json.Marshal(summaries)
 	if err != nil {
 		utils.ForwardStatusError(ctx, http.StatusInternalServerError,
@@ -64,17 +64,17 @@ func ClustersMetricsSummaryHandler(ctx *gin.Context) {
 	ctx.Data(http.StatusOK, "application/json", bodyBytes)
 }
 
-// ClusterMetricsSummaryHandler  godoc
+// ClusterResourcesSummaryHandler  godoc
 //
-//	@Summary		Get specific cluster metrics summary
-//	@Description	Get specific cluster metrics summary in current two month
-//	@Tags			Metrics
+//	@Summary		Get specific cluster resources summary
+//	@Description	Get specific cluster resources summary in current two month
+//	@Tags			Resources
 //	@Produce		json
 //	@Param			cluster_id	path		string	true	"Cluster Id"
-//	@Success		200			{object}	api.ClusterMetricsSummary
+//	@Success		200			{object}	api.ClusterResourcesSummary
 //	@Failure		500			{object}	api.StatusError
-//	@Router			/metrics/clusters/{cluster_id}/summary [get]
-func ClusterMetricsSummaryHandler(ctx *gin.Context) {
+//	@Router			/resources/clusters/{cluster_id}/summary [get]
+func ClusterResourcesSummaryHandler(ctx *gin.Context) {
 	klog.Infof("Start to query specific cluster metrics summary")
 	clusterId := utils.ParseClusterFromCtx(ctx)
 	tenantId := utils.ParserTenantIdFromCtx(ctx)
@@ -86,7 +86,7 @@ func ClusterMetricsSummaryHandler(ctx *gin.Context) {
 			api.QueryFailedStatus, api.QueryFailedReason, err.Error())
 		return
 	}
-	clusterSummary, err := implementation.QueryClusterCurrentMetrics(tenantId, clusterId)
+	clusterSummary, err := implementation.QueryClusterCurrentResources(tenantId, clusterId)
 	if err != nil {
 		utils.ForwardStatusError(ctx, http.StatusInternalServerError,
 			api.QueryFailedStatus, api.QueryFailedReason, err.Error())

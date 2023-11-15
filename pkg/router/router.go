@@ -46,11 +46,11 @@ func NewServerRouter() *gin.Engine {
 }
 
 func initMetricsRouter(router *gin.Engine, corsHandler gin.HandlerFunc) {
-	metricsGroup := router.Group("/api/v1/metrics")
-	metricsGroup.GET("/summary", metrics_handler.ClustersMetricsSummaryHandler)
-	metricsGroup.GET("/clusters/:cluster_id/summary", metrics_handler.ClusterMetricsSummaryHandler)
-	metricsGroup.GET("/clusters/:cluster_id/cpu", metrics_handler.ClusterCPUMetricsHandler)
-	metricsGroup.GET("/clusters/:cluster_id/memory", metrics_handler.ClusterMemoryMetricsHandler)
+	metricsGroup := router.Group("/api/v1/resources")
+	metricsGroup.GET("/summary", metrics_handler.ClustersResourcesSummaryHandler)
+	metricsGroup.GET("/clusters/:cluster_id/summary", metrics_handler.ClusterResourcesSummaryHandler)
+	metricsGroup.GET("/clusters/:cluster_id/cpu", metrics_handler.ClusterCPUResourcesHandler)
+	metricsGroup.GET("/clusters/:cluster_id/memory", metrics_handler.ClusterMemoryResourcesHandler)
 	metricsGroup.Use(gzip.Gzip(gzip.DefaultCompression))
 	metricsGroup.Use(corsHandler)
 }

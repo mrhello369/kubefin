@@ -36,7 +36,7 @@ func TestAllClustersMetricsSummary(t *testing.T) {
 	if err != nil || code != http.StatusOK {
 		t.Fatalf("Get all clusters metrics summary error:%v, %d", err, code)
 	}
-	allClustersSummary := api.ClusterMetricsSummaryList{}
+	allClustersSummary := api.ClusterResourcesSummaryList{}
 	err = json.Unmarshal(body, &allClustersSummary)
 	if err != nil {
 		t.Fatalf("Marshal clusters metrics summary error:%v", err)
@@ -55,7 +55,7 @@ func TestSpecificClusterMetricsSummary(t *testing.T) {
 		if err != nil || code != http.StatusOK {
 			t.Fatalf("Get specific cluster metrics summary error:%v, %d", err, code)
 		}
-		clusterSummary := api.ClusterMetricsSummary{}
+		clusterSummary := api.ClusterResourcesSummary{}
 		err = json.Unmarshal(body, &clusterSummary)
 		if err != nil {
 			t.Fatalf("Marshal cluster metrics summary error:%v", err)

@@ -20,7 +20,7 @@ import (
 	"github.com/kubefin/kubefin/pkg/api"
 )
 
-func ValidateAllClustersMetricsSummary(clustersSummary *api.ClusterMetricsSummaryList) bool {
+func ValidateAllClustersMetricsSummary(clustersSummary *api.ClusterResourcesSummaryList) bool {
 	for _, cluster := range clustersSummary.Items {
 		if cluster.ClusterConnectionSate != "running" ||
 			cluster.NodeNumbersCurrent == 0 ||
@@ -35,7 +35,7 @@ func ValidateAllClustersMetricsSummary(clustersSummary *api.ClusterMetricsSummar
 	return true
 }
 
-func ValidateSpecificClusterMetricsSummary(clusterSummary *api.ClusterMetricsSummary) bool {
+func ValidateSpecificClusterMetricsSummary(clusterSummary *api.ClusterResourcesSummary) bool {
 	if clusterSummary.ClusterConnectionSate != "running" ||
 		clusterSummary.NodeNumbersCurrent == 0 ||
 		clusterSummary.PodTotalCurrent == 0 ||
