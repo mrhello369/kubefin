@@ -146,7 +146,7 @@ func queryClusterResourceSystemTakenWithTimeRange(tenantId, clusterId string, re
 
 func queryClusterResourceRequestWithTimeRange(tenantId, clusterId string, resourceType v1.ResourceName, start, end, stepSeconds int64) ([]model.SamplePair, error) {
 	var request []model.SamplePair
-	promql := fmt.Sprintf(query.QlSumPodResourceRequestFromCluster, clusterId, resourceType)
+	promql := fmt.Sprintf(query.QlSumNodeResourceRequestFromCluster, clusterId, resourceType)
 	ret, err := query.GetPromQueryClient().WithTenantId(tenantId).QueryRangeWithStep(promql, start, end, stepSeconds)
 	if err != nil {
 		klog.Errorf("Query cluster(%s) resource request error:%v", clusterId, err)

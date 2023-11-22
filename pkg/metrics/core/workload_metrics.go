@@ -388,7 +388,7 @@ func (c *workloadMetricsCollector) parseCustomTargetToGVR(target insightv1alpha1
 func (c *workloadMetricsCollector) collectResourceRequestMetrics(pods []*corev1.Pod, labels prometheus.Labels, ch chan<- prometheus.Metric) {
 	cpuTotalRequest, ramTotalRequest := map[string]float64{}, map[string]float64{}
 	for _, pod := range pods {
-		cpu, ram := utils.ParsePodResourceRequest(pod.Spec.Containers)
+		cpu, ram := utils.ParsePodResourceRequest(pod, pod.Spec.NodeName != "")
 		for containerName, value := range cpu {
 			if _, ok := cpuTotalRequest[containerName]; !ok {
 				cpuTotalRequest[containerName] = 0

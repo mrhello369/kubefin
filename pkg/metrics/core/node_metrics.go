@@ -89,6 +89,9 @@ var (
 	nodeResourceUsageDesc = prometheus.NewDesc(
 		values.NodeResourceUsageMetricsName,
 		"The node resource usage for the node", resourceMetricsLabelKey, nil)
+	nodeResourceRequestedDesc = prometheus.NewDesc(
+		values.NodeResourceRequestedName,
+		"The node resoruce requested for the node", resourceMetricsLabelKey, nil)
 )
 
 type nodeResourceInfo struct {
@@ -117,6 +120,7 @@ func (n *nodeMetricsCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- nodeResourceSystemTakenDesc
 	ch <- nodeResourceAvailableDesc
 	ch <- nodeResourceUsageDesc
+	ch <- nodeResourceRequestedDesc
 }
 
 func (n *nodeMetricsCollector) Collect(ch chan<- prometheus.Metric) {
@@ -163,6 +167,9 @@ func (n *nodeMetricsCollector) addPodResourceRequested(pod *corev1.Pod) {
 
 func (n *nodeMetricsCollector) handlePodAddition(pod *corev1.Pod) {
 	if pod.Spec.NodeName != "" {
+		if pod.Status.Phase == corev1.PodFailed || pod.Status.Phase == corev1.PodSucceeded {
+			return
+		}
 		n.mutex.Lock()
 		defer n.mutex.Unlock()
 
@@ -174,7 +181,14 @@ func (n *nodeMetricsCollector) handlePodAddition(pod *corev1.Pod) {
 }
 
 func (n *nodeMetricsCollector) handlePodUpdate(oldPod, newPod *corev1.Pod) {
-	if oldPod.Spec.NodeName == "" && newPod.Spec.NodeName != "" {
+	if newPod.Spec.NodeName == "" {
+		return
+	}
+
+	if oldPod.Spec.NodeName == "" {
+		if newPod.Status.Phase == corev1.PodFailed || newPod.Status.Phase == corev1.PodSucceeded {
+			return
+		}
 		n.mutex.Lock()
 		defer n.mutex.Unlock()
 
@@ -182,6 +196,13 @@ func (n *nodeMetricsCollector) handlePodUpdate(oldPod, newPod *corev1.Pod) {
 			klog.Warningf("Node %s not found in cluster", newPod.Spec.NodeName)
 		}
 		n.addPodResourceRequested(newPod)
+		return
+	}
+
+	// Referring issue: https://github.com/kubefin/kubefin/issues/28
+	if (oldPod.Status.Phase != corev1.PodFailed && oldPod.Status.Phase != corev1.PodSucceeded) &&
+		(newPod.Status.Phase == corev1.PodFailed || newPod.Status.Phase == corev1.PodSucceeded) {
+		n.deletePodResourceRequested(newPod)
 	}
 }
 
@@ -200,6 +221,9 @@ func (n *nodeMetricsCollector) deletePodResourceRequested(pod *corev1.Pod) {
 
 func (n *nodeMetricsCollector) handlePodDeletion(pod *corev1.Pod) {
 	if pod.Spec.NodeName != "" {
+		if pod.Status.Phase == corev1.PodFailed || pod.Status.Phase == corev1.PodSucceeded {
+			return
+		}
 		n.mutex.Lock()
 		defer n.mutex.Unlock()
 
@@ -300,12 +324,13 @@ func (n *nodeMetricsCollector) collectNodeResourceMetrics(ch chan<- prometheus.M
 
 			resourceSystemTaken := nodeCostInfo.CPUCore - utils.ConvertQualityToCore(&allocatable)
 			allocatable.Sub(requested)
-			resoruceAvailable := utils.ConvertQualityToCore(&allocatable)
 
+			ch <- prometheus.MustNewConstMetric(nodeResourceRequestedDesc,
+				prometheus.GaugeValue, utils.ConvertQualityToCore(&requested), utils.ConvertPrometheusLabelValuesInOrder(resourceMetricsLabelKey, metricsLabels)...)
 			ch <- prometheus.MustNewConstMetric(nodeResourceSystemTakenDesc,
 				prometheus.GaugeValue, resourceSystemTaken, utils.ConvertPrometheusLabelValuesInOrder(resourceMetricsLabelKey, metricsLabels)...)
 			ch <- prometheus.MustNewConstMetric(nodeResourceAvailableDesc,
-				prometheus.GaugeValue, resoruceAvailable, utils.ConvertPrometheusLabelValuesInOrder(resourceMetricsLabelKey, metricsLabels)...)
+				prometheus.GaugeValue, utils.ConvertQualityToCore(&allocatable), utils.ConvertPrometheusLabelValuesInOrder(resourceMetricsLabelKey, metricsLabels)...)
 		}
 		n.mutex.Unlock()
 
@@ -320,12 +345,13 @@ func (n *nodeMetricsCollector) collectNodeResourceMetrics(ch chan<- prometheus.M
 
 			resourceSystemTaken := nodeCostInfo.RamGiB - utils.ConvertQualityToGiB(&allocatable)
 			allocatable.Sub(requested)
-			resoruceAvailable := utils.ConvertQualityToGiB(&allocatable)
 
+			ch <- prometheus.MustNewConstMetric(nodeResourceRequestedDesc,
+				prometheus.GaugeValue, utils.ConvertQualityToGiB(&requested), utils.ConvertPrometheusLabelValuesInOrder(resourceMetricsLabelKey, metricsLabels)...)
 			ch <- prometheus.MustNewConstMetric(nodeResourceSystemTakenDesc,
 				prometheus.GaugeValue, resourceSystemTaken, utils.ConvertPrometheusLabelValuesInOrder(resourceMetricsLabelKey, metricsLabels)...)
 			ch <- prometheus.MustNewConstMetric(nodeResourceAvailableDesc,
-				prometheus.GaugeValue, resoruceAvailable, utils.ConvertPrometheusLabelValuesInOrder(resourceMetricsLabelKey, metricsLabels)...)
+				prometheus.GaugeValue, utils.ConvertQualityToGiB(&allocatable), utils.ConvertPrometheusLabelValuesInOrder(resourceMetricsLabelKey, metricsLabels)...)
 		}
 		n.mutex.Unlock()
 	}

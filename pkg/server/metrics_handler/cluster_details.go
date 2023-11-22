@@ -28,7 +28,6 @@ import (
 	"github.com/kubefin/kubefin/pkg/api"
 	"github.com/kubefin/kubefin/pkg/server/implementation"
 	"github.com/kubefin/kubefin/pkg/utils"
-	"github.com/kubefin/kubefin/pkg/values"
 )
 
 // ClusterCPUResourcesHandler      godoc
@@ -69,16 +68,16 @@ func ClusterMemoryResourcesHandler(ctx *gin.Context) {
 
 func clusterResourcesHandler(ctx *gin.Context, resourceType v1.ResourceName) {
 	tenantId := utils.ParserTenantIdFromCtx(ctx)
-	startTime, endTime, stepSeconds, err := implementation.GetStartEndStepsTimeFromCtx(ctx, values.DefaultDetailStepSeconds)
-	if err != nil {
-		utils.ForwardStatusError(ctx, http.StatusInternalServerError,
-			api.QueryFailedStatus, api.QueryFailedReason, err.Error())
-		return
-	}
 	clusterId := utils.ParseClusterFromCtx(ctx)
 	if clusterId == "" {
 		utils.ForwardStatusError(ctx, http.StatusBadRequest,
 			api.QueryParaErrorStatus, api.QueryParaErrorReason, "")
+		return
+	}
+	startTime, endTime, stepSeconds, err := utils.GetClusterDetailsStartEndStepTime(tenantId, clusterId)
+	if err != nil {
+		utils.ForwardStatusError(ctx, http.StatusInternalServerError,
+			api.QueryFailedStatus, api.QueryFailedReason, err.Error())
 		return
 	}
 	clusterMemoryMetrics, err := implementation.QueryClusterResourcesSummaryWithTimeRange(tenantId, clusterId, resourceType, startTime, endTime, stepSeconds)

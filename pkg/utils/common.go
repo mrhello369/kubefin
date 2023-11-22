@@ -26,8 +26,10 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/model"
 	"k8s.io/apimachinery/pkg/api/resource"
+	"k8s.io/klog/v2"
 
 	"github.com/kubefin/kubefin/pkg/api"
+	"github.com/kubefin/kubefin/pkg/query"
 	"github.com/kubefin/kubefin/pkg/values"
 )
 
@@ -122,4 +124,37 @@ func ConvertPrometheusLabelValuesInOrder(keyOrder []string, labels prometheus.La
 		ret = append(ret, labels[key])
 	}
 	return ret
+}
+
+func GetClusterDetailsStartEndStepTime(tenantId, clusterId string) (int64, int64, int64, error) {
+	promql := fmt.Sprintf(query.QlClusterActivity, clusterId) + "[60d]"
+	clusterState, err := query.GetPromQueryClient().WithTenantId(tenantId).QueryInstantRange(promql)
+	if err != nil {
+		klog.Errorf("Failed to query clusters' state:%v", err)
+		return 0, 0, 0, err
+	}
+
+	if len(clusterState) == 0 {
+		err := fmt.Errorf("no such cluster:%s", clusterId)
+		klog.Errorf("%v", err)
+		return 0, 0, 0, err
+	}
+	start := clusterState[0].Values[0].Timestamp.Unix()
+	end := time.Now().Unix()
+	// The max point number is 11000, or the query will fail
+	stepSeconds := (end - start) / 11000
+	if stepSeconds <= 0 {
+		stepSeconds = int64(values.MetricsPeriodInSeconds)
+	}
+	stepSeconds = getMultipleOfPeriod(stepSeconds)
+
+	return start, end, stepSeconds, nil
+}
+
+func getMultipleOfPeriod(stepSeconds int64) int64 {
+	periodSeconds := int64(values.MetricsPeriodInSeconds)
+	if stepSeconds%periodSeconds != 0 {
+		return (stepSeconds/periodSeconds)*periodSeconds + periodSeconds
+	}
+	return stepSeconds
 }

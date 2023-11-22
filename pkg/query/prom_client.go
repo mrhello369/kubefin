@@ -180,55 +180,6 @@ func (p *PromQueryClient) queryInstant(promql string, time string) ([]byte, erro
 	return bodyBytes, nil
 }
 
-func (p *PromQueryClient) QueryRange(promql string, start, end int64) ([]*model.SampleStream, error) {
-	req, err := http.NewRequest(http.MethodGet, p.endpoint+rangeQueryBaseUrl, nil)
-	if err != nil {
-		klog.Errorf("Create http request error:%v", err)
-		return nil, err
-	}
-
-	// The returned max point's number is 11000, so we chould choose a right step step seconds
-	stepSeconds := (end - start) / 10000
-	if stepSeconds < 15 {
-		stepSeconds = 15
-	}
-
-	queryParameters := req.URL.Query()
-	queryParameters.Add("query", promql)
-	queryParameters.Add("start", fmt.Sprintf("%d", start))
-	queryParameters.Add("end", fmt.Sprintf("%d", end))
-	// KubeFin collect metrics in 15s period
-	queryParameters.Add("step", fmt.Sprintf("%ds", stepSeconds))
-	if p.tenantId != "" {
-		klog.V(4).Infof("Query data with tenant id:%s", p.tenantId)
-		req.Header.Add(values.MultiTenantHeader, p.tenantId)
-	}
-	req.URL.RawQuery = queryParameters.Encode()
-	resp, err := p.httpClient.Do(req)
-	if err != nil {
-		klog.Errorf("Promql query range error:%v", err)
-		return nil, err
-	}
-	bodyBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		klog.Errorf("Read resp body error:%v", err)
-		return nil, err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		err := fmt.Errorf("query backend error:%s", string(bodyBytes))
-		klog.Errorf("%v", err)
-		return nil, err
-	}
-
-	message := &PromqlRangeMessageType{}
-	if err := json.Unmarshal(bodyBytes, message); err != nil {
-		klog.Errorf("Unmarshal error:%v", err)
-	}
-
-	return message.Data.Result, nil
-}
-
 func (p *PromQueryClient) QueryRangeWithStep(promql string, start, end, stepSeconds int64) ([]*model.SampleStream, error) {
 	req, err := http.NewRequest(http.MethodGet, p.endpoint+rangeQueryBaseUrl, nil)
 	if err != nil {

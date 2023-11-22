@@ -33,6 +33,7 @@ var (
 	NodeResourceSystemTakenName      = "kubefin_node_resoruce_system_taken"
 	NodeResourceAvailableMetricsName = "kubefin_node_resource_available"
 	NodeResourceUsageMetricsName     = "kubefin_node_resource_usage"
+	NodeResourceRequestedName        = "kubefin_node_resource_requested"
 
 	// workload level metric name
 	WorkloadResourceCostMetricsName    = "kubefin_workload_resource_cost"
