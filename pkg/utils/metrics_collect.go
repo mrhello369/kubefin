@@ -18,17 +18,26 @@ package utils
 
 import (
 	v1 "k8s.io/api/core/v1"
-	v12 "k8s.io/client-go/listers/core/v1"
+	listercorev1 "k8s.io/client-go/listers/core/v1"
 	"k8s.io/klog/v2"
 
 	"github.com/kubefin/kubefin/pkg/cloudprice"
 	"github.com/kubefin/kubefin/pkg/values"
 )
 
-func ParsePodResourceRequest(Containers []v1.Container) (cpu, ram map[string]float64) {
+func ParsePodResourceRequest(pod *v1.Pod, scheduled bool) (cpu, ram map[string]float64) {
 	cpu = make(map[string]float64)
 	ram = make(map[string]float64)
-	for _, container := range Containers {
+	// Referring issue: https://github.com/kubefin/kubefin/issues/28
+	if pod.Status.Phase == v1.PodSucceeded || pod.Status.Phase == v1.PodFailed || !scheduled {
+		for _, container := range pod.Spec.Containers {
+			cpu[container.Name] = 0.0
+			ram[container.Name] = 0.0
+		}
+		return
+	}
+
+	for _, container := range pod.Spec.Containers {
 		if _, ok := cpu[container.Name]; !ok {
 			cpu[container.Name] = 0.0
 		}
@@ -41,7 +50,7 @@ func ParsePodResourceRequest(Containers []v1.Container) (cpu, ram map[string]flo
 	return
 }
 
-func ParsePodResourceCost(pod *v1.Pod, provider cloudprice.CloudProviderInterface, lister v12.NodeLister) float64 {
+func ParsePodResourceCost(pod *v1.Pod, provider cloudprice.CloudProviderInterface, lister listercorev1.NodeLister) float64 {
 	var cpu, ram float64
 	for _, container := range pod.Spec.Containers {
 		cpu += float64(container.Resources.Requests.Cpu().MilliValue()) / values.CoreInMCore

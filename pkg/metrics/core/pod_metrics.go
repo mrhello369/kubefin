@@ -122,7 +122,7 @@ func (p *podMetricsCollector) Collect(ch chan<- prometheus.Metric) {
 			values.ClusterIdLabelKey:   p.clusterId,
 			values.LabelsLabelKey:      string(podLabels),
 		}
-		cpuRequest, memoryRequest := utils.ParsePodResourceRequest(pod.Spec.Containers)
+		cpuRequest, memoryRequest := utils.ParsePodResourceRequest(pod, pod.Spec.NodeName != "")
 
 		crNoneCareLabels[values.ResourceTypeLabelKey] = string(corev1.ResourceCPU)
 		for containerName, cpu := range cpuRequest {
