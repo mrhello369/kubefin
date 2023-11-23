@@ -25,7 +25,7 @@ import (
 
 	_ "github.com/kubefin/kubefin/api"
 	"github.com/kubefin/kubefin/pkg/server/costs_handler"
-	"github.com/kubefin/kubefin/pkg/server/metrics_handler"
+	"github.com/kubefin/kubefin/pkg/server/resources_handler"
 )
 
 func NewServerRouter() *gin.Engine {
@@ -47,10 +47,10 @@ func NewServerRouter() *gin.Engine {
 
 func initMetricsRouter(router *gin.Engine, corsHandler gin.HandlerFunc) {
 	metricsGroup := router.Group("/api/v1/resources")
-	metricsGroup.GET("/summary", metrics_handler.ClustersResourcesSummaryHandler)
-	metricsGroup.GET("/clusters/:cluster_id/summary", metrics_handler.ClusterResourcesSummaryHandler)
-	metricsGroup.GET("/clusters/:cluster_id/cpu", metrics_handler.ClusterCPUResourcesHandler)
-	metricsGroup.GET("/clusters/:cluster_id/memory", metrics_handler.ClusterMemoryResourcesHandler)
+	metricsGroup.GET("/summary", resources_handler.ClustersResourcesSummaryHandler)
+	metricsGroup.GET("/clusters/:cluster_id/summary", resources_handler.ClusterResourcesSummaryHandler)
+	metricsGroup.GET("/clusters/:cluster_id/cpu", resources_handler.ClusterCPUResourcesHandler)
+	metricsGroup.GET("/clusters/:cluster_id/memory", resources_handler.ClusterMemoryResourcesHandler)
 	metricsGroup.Use(gzip.Gzip(gzip.DefaultCompression))
 	metricsGroup.Use(corsHandler)
 }

@@ -26,6 +26,7 @@ rm -fr ${YAML_OUTPUT_DIR}/*.yaml
 
 # generate the cluster deployment yaml
 hack/init-primary-config.sh auto cluster-0 true "${TAG}"
+hack/init-secondary-config.sh auto cluster-1 http://127.0.0.1/api/v1/push
 
 # Generated KubeFin component YAML files
 readonly KUBEFIN_CRD_YAML=${YAML_OUTPUT_DIR}/kubefin-crd.yaml
@@ -61,8 +62,8 @@ rm -rf config_primary/third_party/grafana.yaml
 
 echo "Building KubeFin"
 ko resolve ${KO_YAML_FLAGS} -t ${TAG} --tag-only -B -R -f config_primary/crds | "${LABEL_YAML_CMD[@]}" > "${KUBEFIN_CRD_YAML}"
-ko resolve ${KO_YAML_FLAGS} -t ${TAG} --tag-only -B -R -f config_primary/core/200-roles/,config_primary/core/300-customworkloadinsight/,config_primary/core/configmap/,config_primary/core/deployments/kubefin-agent.yaml,config_primary/core/100-namespace.yaml,config_primary/core/200-serviceaccount.yaml | "${LABEL_YAML_CMD[@]}" >> "${KUBEFIN_SECONDARY_YAML}"
-ko resolve ${KO_YAML_FLAGS} -t ${TAG} --tag-only -B -R -f config_primary/core/ | "${LABEL_YAML_CMD[@]}" > "${KUBEFIN_PRIMARY_YAML}"
+ko resolve ${KO_YAML_FLAGS} -t ${TAG} --tag-only -B -R -f config_secondary/core | "${LABEL_YAML_CMD[@]}" >> "${KUBEFIN_SECONDARY_YAML}"
+ko resolve ${KO_YAML_FLAGS} -t ${TAG} --tag-only -B -R -f config_primary/core,config_primary/third_party | "${LABEL_YAML_CMD[@]}" > "${KUBEFIN_PRIMARY_YAML}"
 
 
 echo "All manifests are generated"
