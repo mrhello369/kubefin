@@ -86,7 +86,7 @@ export function AllClustersDashboard() {
   const fetchClustersData = async () => {
     await Promise.all([
       apiClient.get("/costs/summary"),
-      apiClient.get("/metrics/summary"),
+      apiClient.get("/resources/summary"),
     ])
       .then((data) => {
         const costSummary = data[0].data.items;
