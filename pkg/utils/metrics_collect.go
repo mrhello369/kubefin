@@ -18,6 +18,7 @@ package utils
 
 import (
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	listercorev1 "k8s.io/client-go/listers/core/v1"
 	"k8s.io/klog/v2"
 
@@ -25,9 +26,10 @@ import (
 	"github.com/kubefin/kubefin/pkg/values"
 )
 
-func ParsePodResourceRequest(pod *v1.Pod, scheduled bool) (cpu, ram map[string]float64) {
+func ParsePodResourceRequest(pod *v1.Pod, scheduled bool) (cpu, ram, gpu map[string]float64) {
 	cpu = make(map[string]float64)
 	ram = make(map[string]float64)
+	gpu = make(map[string]float64)
 	// Referring issue: https://github.com/kubefin/kubefin/issues/28
 	if pod.Status.Phase == v1.PodSucceeded || pod.Status.Phase == v1.PodFailed || !scheduled {
 		for _, container := range pod.Spec.Containers {
@@ -36,7 +38,6 @@ func ParsePodResourceRequest(pod *v1.Pod, scheduled bool) (cpu, ram map[string]f
 		}
 		return
 	}
-
 	for _, container := range pod.Spec.Containers {
 		if _, ok := cpu[container.Name]; !ok {
 			cpu[container.Name] = 0.0
@@ -44,17 +45,22 @@ func ParsePodResourceRequest(pod *v1.Pod, scheduled bool) (cpu, ram map[string]f
 		if _, ok := ram[container.Name]; !ok {
 			ram[container.Name] = 0.0
 		}
+		if _, ok := gpu[container.Name]; !ok {
+			gpu[container.Name] = 0.0
+		}
 		cpu[container.Name] += float64(container.Resources.Requests.Cpu().MilliValue()) / values.CoreInMCore
 		ram[container.Name] += float64(container.Resources.Requests.Memory().Value()) / values.GBInBytes
+		gpu[container.Name] += float64(container.Resources.Requests.Name(values.ResourceGPU, resource.DecimalSI).Value())
 	}
 	return
 }
 
 func ParsePodResourceCost(pod *v1.Pod, provider cloudprice.CloudProviderInterface, lister listercorev1.NodeLister) float64 {
-	var cpu, ram float64
+	var cpu, ram, gpu float64
 	for _, container := range pod.Spec.Containers {
 		cpu += float64(container.Resources.Requests.Cpu().MilliValue()) / values.CoreInMCore
 		ram += float64(container.Resources.Requests.Memory().Value()) / values.GBInBytes
+		gpu += float64(container.Resources.Requests.Name(values.ResourceGPU, resource.DecimalSI).Value())
 	}
 
 	if pod.Spec.NodeName == "" {
@@ -74,5 +80,6 @@ func ParsePodResourceCost(pod *v1.Pod, provider cloudprice.CloudProviderInterfac
 
 	cpuCosts := cpu * priceInfo.CPUCoreHourlyPrice
 	memoryCosts := ram * priceInfo.RAMGiBHourlyPrice
-	return cpuCosts + memoryCosts
+	gpuCosts := gpu * priceInfo.GPUCardHourlyPrice
+	return cpuCosts + memoryCosts + gpuCosts
 }

@@ -66,6 +66,15 @@ spec:
           # This only used when we can't recognize the cloud provider or default
           - name: CUSTOM_RAM_GB_HOUR_PRICE
             value: ""
+          # This only used when we can't recognize the cloud provider or default
+          - name: CUSTOM_GPU_CARD_HOUR_PRICE
+            value: ""
+          # This only used when we can't recognize the cloud provider or default
+          - name: CUSTOM_GPU_DEVICE_LABEL_KEY
+            value: ""
+          # This only used when we can't recognize the cloud provider or default
+          - name: CUSTOM_GPU_DEVICE_PRICE_LIST
+            value: ""
           # the eatch node CPU deviation core between the actual core and the one obtained from node.status.capacity, this only used when we can't recognize the cloud provider
           - name: NODE_CPU_DEVIATION
             value: "0.0"

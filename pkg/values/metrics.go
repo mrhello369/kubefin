@@ -24,6 +24,7 @@ var (
 	NodeCPUCoreHourlyCostMetricsName  = "kubefin_node_cpu_core_hourly_cost"
 	NodeCPUHourlyCostMetricsName      = "kubefin_node_cpu_hourly_cost"
 	NodeRAMGBHourlyCostMetricsName    = "kubefin_node_ram_gb_hourly_cost"
+	NodeGPUCardHourlyCostMetricsName  = "kubefin_node_gpu_card_hourly_cost"
 	NodeResourceHourlyCostMetricsName = "kubefin_node_resource_hourly_cost"
 	NodeRAMHourlyCostMetricsName      = "kubefin_node_ram_hourly_cost"
 	NodeTotalHourlyCostMetricsName    = "kubefin_node_total_hourly_cost"

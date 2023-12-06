@@ -30,6 +30,8 @@ type InstancePriceInfo struct {
 	CPUCoreHourlyPrice   float64
 	RamGiB               float64
 	RAMGiBHourlyPrice    float64
+	GPUCards             float64
+	GPUCardHourlyPrice   float64
 	InstanceType         string
 	BillingMode          string
 
