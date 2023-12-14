@@ -71,6 +71,9 @@ var (
 	nodeRAMGBHourlyCostDesc = prometheus.NewDesc(
 		values.NodeRAMGBHourlyCostMetricsName,
 		"The node hourly ram-gb cost for the node", metricsCostLabelKey, nil)
+	nodeGPUCardHourlyCostDesc = prometheus.NewDesc(
+		values.NodeGPUCardHourlyCostMetricsName,
+		"The node hourly gpu-card cost for the node", metricsCostLabelKey, nil)
 	nodeTotalCostDesc = prometheus.NewDesc(
 		values.NodeTotalHourlyCostMetricsName,
 		"The node total hourly cost for the node", metricsCostLabelKey, nil)
@@ -82,7 +85,7 @@ var (
 		"The total node resource for the node", resourceMetricsLabelKey, nil)
 	nodeResourceSystemTakenDesc = prometheus.NewDesc(
 		values.NodeResourceSystemTakenName,
-		"The total node resoruce taken by system", resourceMetricsLabelKey, nil)
+		"The total node resource taken by system", resourceMetricsLabelKey, nil)
 	nodeResourceAvailableDesc = prometheus.NewDesc(
 		values.NodeResourceAvailableMetricsName,
 		"The node resource allocatable for the node", resourceMetricsLabelKey, nil)
@@ -108,12 +111,13 @@ type nodeMetricsCollector struct {
 	nodeLister        v1.NodeLister
 
 	mutex        sync.Mutex
-	nodeResouece map[string]nodeResourceInfo
+	nodeResource map[string]nodeResourceInfo
 }
 
 func (n *nodeMetricsCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- nodeCPUCoreHourlyCostDesc
 	ch <- nodeRAMGBHourlyCostDesc
+	ch <- nodeGPUCardHourlyCostDesc
 	ch <- nodeTotalCostDesc
 	ch <- nodeResourceHourlyCostDesc
 	ch <- nodeResourceTotalDesc
@@ -130,37 +134,37 @@ func (n *nodeMetricsCollector) Collect(ch chan<- prometheus.Metric) {
 }
 
 func (n *nodeMetricsCollector) handleNodeAddition(node *corev1.Node) {
-	if _, ok := n.nodeResouece[node.Name]; !ok {
+	if _, ok := n.nodeResource[node.Name]; !ok {
 		n.mutex.Lock()
 		defer n.mutex.Unlock()
-		n.nodeResouece[node.Name] = nodeResourceInfo{
+		n.nodeResource[node.Name] = nodeResourceInfo{
 			allocatableResource: corev1.ResourceList{},
 			requestedResource:   corev1.ResourceList{},
 		}
 
 		for resourceName, resourceValue := range node.Status.Allocatable {
-			n.nodeResouece[node.Name].allocatableResource[resourceName] = resourceValue
+			n.nodeResource[node.Name].allocatableResource[resourceName] = resourceValue
 		}
 	}
 }
 
 func (n *nodeMetricsCollector) handleNodeDeletion(node *corev1.Node) {
-	if _, ok := n.nodeResouece[node.Name]; !ok {
+	if _, ok := n.nodeResource[node.Name]; !ok {
 		n.mutex.Lock()
 		defer n.mutex.Unlock()
-		delete(n.nodeResouece, node.Name)
+		delete(n.nodeResource, node.Name)
 	}
 }
 
 func (n *nodeMetricsCollector) addPodResourceRequested(pod *corev1.Pod) {
 	for _, container := range pod.Spec.Containers {
 		for resourceName, resourceValue := range container.Resources.Requests {
-			requested, ok := n.nodeResouece[pod.Spec.NodeName].requestedResource[resourceName]
+			requested, ok := n.nodeResource[pod.Spec.NodeName].requestedResource[resourceName]
 			if !ok {
 				requested = resource.Quantity{}
 			}
 			requested.Add(resourceValue)
-			n.nodeResouece[pod.Spec.NodeName].requestedResource[resourceName] = requested
+			n.nodeResource[pod.Spec.NodeName].requestedResource[resourceName] = requested
 		}
 	}
 }
@@ -173,7 +177,7 @@ func (n *nodeMetricsCollector) handlePodAddition(pod *corev1.Pod) {
 		n.mutex.Lock()
 		defer n.mutex.Unlock()
 
-		if _, ok := n.nodeResouece[pod.Spec.NodeName]; !ok {
+		if _, ok := n.nodeResource[pod.Spec.NodeName]; !ok {
 			klog.Warningf("Node %s not found in cluster", pod.Spec.NodeName)
 		}
 		n.addPodResourceRequested(pod)
@@ -192,7 +196,7 @@ func (n *nodeMetricsCollector) handlePodUpdate(oldPod, newPod *corev1.Pod) {
 		n.mutex.Lock()
 		defer n.mutex.Unlock()
 
-		if _, ok := n.nodeResouece[newPod.Spec.NodeName]; !ok {
+		if _, ok := n.nodeResource[newPod.Spec.NodeName]; !ok {
 			klog.Warningf("Node %s not found in cluster", newPod.Spec.NodeName)
 		}
 		n.addPodResourceRequested(newPod)
@@ -209,12 +213,12 @@ func (n *nodeMetricsCollector) handlePodUpdate(oldPod, newPod *corev1.Pod) {
 func (n *nodeMetricsCollector) deletePodResourceRequested(pod *corev1.Pod) {
 	for _, container := range pod.Spec.Containers {
 		for resourceName, resourceValue := range container.Resources.Requests {
-			requested, ok := n.nodeResouece[pod.Spec.NodeName].requestedResource[resourceName]
+			requested, ok := n.nodeResource[pod.Spec.NodeName].requestedResource[resourceName]
 			if !ok {
 				continue
 			}
 			requested.Sub(resourceValue)
-			n.nodeResouece[pod.Spec.NodeName].requestedResource[resourceName] = requested
+			n.nodeResource[pod.Spec.NodeName].requestedResource[resourceName] = requested
 		}
 	}
 }
@@ -258,6 +262,8 @@ func (n *nodeMetricsCollector) collectNodeCost(ch chan<- prometheus.Metric) {
 			prometheus.GaugeValue, nodeCostInfo.CPUCoreHourlyPrice, utils.ConvertPrometheusLabelValuesInOrder(metricsCostLabelKey, metricsLabelValues)...)
 		ch <- prometheus.MustNewConstMetric(nodeRAMGBHourlyCostDesc,
 			prometheus.GaugeValue, nodeCostInfo.RAMGiBHourlyPrice, utils.ConvertPrometheusLabelValuesInOrder(metricsCostLabelKey, metricsLabelValues)...)
+		ch <- prometheus.MustNewConstMetric(nodeGPUCardHourlyCostDesc,
+			prometheus.GaugeValue, nodeCostInfo.GPUCardHourlyPrice, utils.ConvertPrometheusLabelValuesInOrder(metricsCostLabelKey, metricsLabelValues)...)
 		ch <- prometheus.MustNewConstMetric(nodeTotalCostDesc,
 			prometheus.GaugeValue, nodeCostInfo.NodeTotalHourlyPrice, utils.ConvertPrometheusLabelValuesInOrder(metricsCostLabelKey, metricsLabelValues)...)
 
@@ -267,6 +273,9 @@ func (n *nodeMetricsCollector) collectNodeCost(ch chan<- prometheus.Metric) {
 		metricsLabelValues[values.ResourceTypeLabelKey] = string(corev1.ResourceMemory)
 		ch <- prometheus.MustNewConstMetric(nodeResourceHourlyCostDesc,
 			prometheus.GaugeValue, nodeCostInfo.RAMGiBHourlyPrice*nodeCostInfo.RamGiB, utils.ConvertPrometheusLabelValuesInOrder(metricsCostUnifiedLabelKey, metricsLabelValues)...)
+		metricsLabelValues[values.ResourceTypeLabelKey] = string(values.ResourceGPU)
+		ch <- prometheus.MustNewConstMetric(nodeResourceHourlyCostDesc,
+			prometheus.GaugeValue, nodeCostInfo.GPUCardHourlyPrice*nodeCostInfo.GPUCards, utils.ConvertPrometheusLabelValuesInOrder(metricsCostUnifiedLabelKey, metricsLabelValues)...)
 	}
 }
 
@@ -290,6 +299,9 @@ func (n *nodeMetricsCollector) collectNodeResourceUsage(ch chan<- prometheus.Met
 		metricsLabels[values.ResourceTypeLabelKey] = string(corev1.ResourceMemory)
 		ch <- prometheus.MustNewConstMetric(nodeResourceUsageDesc,
 			prometheus.GaugeValue, node.MemoryUsage, utils.ConvertPrometheusLabelValuesInOrder(resourceMetricsLabelKey, metricsLabels)...)
+
+		// metrics-server cannot provide metrics about GPU usage,
+		// an alternative is to introduce dcgm-exporter.
 	}
 }
 
@@ -318,9 +330,9 @@ func (n *nodeMetricsCollector) collectNodeResourceMetrics(ch chan<- prometheus.M
 			prometheus.GaugeValue, nodeCostInfo.CPUCore, utils.ConvertPrometheusLabelValuesInOrder(resourceMetricsLabelKey, metricsLabels)...)
 
 		n.mutex.Lock()
-		if _, ok := n.nodeResouece[node.Name]; ok {
-			allocatable := n.nodeResouece[node.Name].allocatableResource[corev1.ResourceCPU]
-			requested := n.nodeResouece[node.Name].requestedResource[corev1.ResourceCPU]
+		if _, ok := n.nodeResource[node.Name]; ok {
+			allocatable := n.nodeResource[node.Name].allocatableResource[corev1.ResourceCPU]
+			requested := n.nodeResource[node.Name].requestedResource[corev1.ResourceCPU]
 
 			resourceSystemTaken := nodeCostInfo.CPUCore - utils.ConvertQualityToCore(&allocatable)
 			allocatable.Sub(requested)
@@ -339,9 +351,9 @@ func (n *nodeMetricsCollector) collectNodeResourceMetrics(ch chan<- prometheus.M
 			prometheus.GaugeValue, nodeCostInfo.RamGiB, utils.ConvertPrometheusLabelValuesInOrder(resourceMetricsLabelKey, metricsLabels)...)
 
 		n.mutex.Lock()
-		if _, ok := n.nodeResouece[node.Name]; ok {
-			allocatable := n.nodeResouece[node.Name].allocatableResource[corev1.ResourceMemory]
-			requested := n.nodeResouece[node.Name].requestedResource[corev1.ResourceMemory]
+		if _, ok := n.nodeResource[node.Name]; ok {
+			allocatable := n.nodeResource[node.Name].allocatableResource[corev1.ResourceMemory]
+			requested := n.nodeResource[node.Name].requestedResource[corev1.ResourceMemory]
 
 			resourceSystemTaken := nodeCostInfo.RamGiB - utils.ConvertQualityToGiB(&allocatable)
 			allocatable.Sub(requested)
@@ -350,6 +362,24 @@ func (n *nodeMetricsCollector) collectNodeResourceMetrics(ch chan<- prometheus.M
 				prometheus.GaugeValue, utils.ConvertQualityToGiB(&requested), utils.ConvertPrometheusLabelValuesInOrder(resourceMetricsLabelKey, metricsLabels)...)
 			ch <- prometheus.MustNewConstMetric(nodeResourceSystemTakenDesc,
 				prometheus.GaugeValue, resourceSystemTaken, utils.ConvertPrometheusLabelValuesInOrder(resourceMetricsLabelKey, metricsLabels)...)
+			ch <- prometheus.MustNewConstMetric(nodeResourceAvailableDesc,
+				prometheus.GaugeValue, utils.ConvertQualityToGiB(&allocatable), utils.ConvertPrometheusLabelValuesInOrder(resourceMetricsLabelKey, metricsLabels)...)
+		}
+		n.mutex.Unlock()
+
+		metricsLabels[values.ResourceTypeLabelKey] = string(values.ResourceGPU)
+		ch <- prometheus.MustNewConstMetric(nodeResourceTotalDesc,
+			prometheus.GaugeValue, nodeCostInfo.GPUCards, utils.ConvertPrometheusLabelValuesInOrder(resourceMetricsLabelKey, metricsLabels)...)
+
+		n.mutex.Lock()
+		if _, ok := n.nodeResource[node.Name]; ok {
+			allocatable := n.nodeResource[node.Name].allocatableResource[values.ResourceGPU]
+			requested := n.nodeResource[node.Name].requestedResource[values.ResourceGPU]
+
+			allocatable.Sub(requested)
+
+			ch <- prometheus.MustNewConstMetric(nodeResourceRequestedDesc,
+				prometheus.GaugeValue, utils.ConvertQualityToGiB(&requested), utils.ConvertPrometheusLabelValuesInOrder(resourceMetricsLabelKey, metricsLabels)...)
 			ch <- prometheus.MustNewConstMetric(nodeResourceAvailableDesc,
 				prometheus.GaugeValue, utils.ConvertQualityToGiB(&allocatable), utils.ConvertPrometheusLabelValuesInOrder(resourceMetricsLabelKey, metricsLabels)...)
 		}
@@ -382,7 +412,7 @@ func RegisterNodeLevelMetricsCollection(agentOptions *options.AgentOptions,
 		usageMetricsCache: usageMetricsCache,
 		provider:          provider,
 		nodeLister:        coreResourceInformerLister.NodeLister,
-		nodeResouece:      make(map[string]nodeResourceInfo),
+		nodeResource:      make(map[string]nodeResourceInfo),
 	}
 
 	nodeMetricsCollector.registerNodeResourceEventHandler(coreResourceInformerLister)

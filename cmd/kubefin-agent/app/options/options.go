@@ -37,11 +37,14 @@ type AgentOptions struct {
 	ClusterName   string
 	ClusterId     string
 
-	NodeCPUCoreDeviation   string
-	NodeRAMGBDeviation     string
-	CPUMemoryCostRatio     string
-	CustomCPUCoreHourPrice string
-	CustomRAMGBHourPrice   string
+	NodeCPUCoreDeviation     string
+	NodeRAMGBDeviation       string
+	CPUMemoryCostRatio       string
+	CustomCPUCoreHourPrice   string
+	CustomRAMGBHourPrice     string
+	CustomGPUCardHourPrice   string
+	CustomGPUDeviceLabelKey  string
+	CustomGPUDevicePriceList string
 }
 
 // NewAgentOptions builds an empty options.
@@ -55,16 +58,19 @@ func NewAgentOptions() *AgentOptions {
 			RenewDeadline:     metav1.Duration{Duration: values.DefaultRenewDeadline},
 			RetryPeriod:       metav1.Duration{Duration: values.DefaultRetryPeriod},
 		},
-		ScrapMetricsInterval:   values.DefaultMetricsQueryPeriod,
-		LeaderElectionID:       os.Getenv(values.LeaderElectionIDEnv),
-		CloudProvider:          os.Getenv(values.CloudProviderEnv),
-		ClusterName:            os.Getenv(values.ClusterNameEnv),
-		ClusterId:              os.Getenv(values.ClusterIdEnv),
-		CPUMemoryCostRatio:     os.Getenv(values.CPUMemoryCostRatioEnv),
-		CustomCPUCoreHourPrice: os.Getenv(values.CustomCPUCoreHourPriceEnv),
-		CustomRAMGBHourPrice:   os.Getenv(values.CustomRAMGBHourPriceEnv),
-		NodeCPUCoreDeviation:   os.Getenv(values.NodeCPUDeviationEnv),
-		NodeRAMGBDeviation:     os.Getenv(values.NodeRAMDeviationEnv),
+		ScrapMetricsInterval:     values.DefaultMetricsQueryPeriod,
+		LeaderElectionID:         os.Getenv(values.LeaderElectionIDEnv),
+		CloudProvider:            os.Getenv(values.CloudProviderEnv),
+		ClusterName:              os.Getenv(values.ClusterNameEnv),
+		ClusterId:                os.Getenv(values.ClusterIdEnv),
+		CPUMemoryCostRatio:       os.Getenv(values.CPUMemoryCostRatioEnv),
+		CustomCPUCoreHourPrice:   os.Getenv(values.CustomCPUCoreHourPriceEnv),
+		CustomRAMGBHourPrice:     os.Getenv(values.CustomRAMGBHourPriceEnv),
+		CustomGPUCardHourPrice:   os.Getenv(values.CustomGPUCardHourPriceEnv),
+		CustomGPUDeviceLabelKey:  os.Getenv(values.CustomGPUDeviceLabelKeyEnv),
+		CustomGPUDevicePriceList: os.Getenv(values.CustomGPUDevicePriceListEnv),
+		NodeCPUCoreDeviation:     os.Getenv(values.NodeCPUDeviationEnv),
+		NodeRAMGBDeviation:       os.Getenv(values.NodeRAMDeviationEnv),
 	}
 }
 

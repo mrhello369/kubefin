@@ -386,9 +386,9 @@ func (c *workloadMetricsCollector) parseCustomTargetToGVR(target insightv1alpha1
 }
 
 func (c *workloadMetricsCollector) collectResourceRequestMetrics(pods []*corev1.Pod, labels prometheus.Labels, ch chan<- prometheus.Metric) {
-	cpuTotalRequest, ramTotalRequest := map[string]float64{}, map[string]float64{}
+	cpuTotalRequest, ramTotalRequest, gpuTotalRequest := map[string]float64{}, map[string]float64{}, map[string]float64{}
 	for _, pod := range pods {
-		cpu, ram := utils.ParsePodResourceRequest(pod, pod.Spec.NodeName != "")
+		cpu, ram, gpu := utils.ParsePodResourceRequest(pod, pod.Spec.NodeName != "")
 		for containerName, value := range cpu {
 			if _, ok := cpuTotalRequest[containerName]; !ok {
 				cpuTotalRequest[containerName] = 0
@@ -400,6 +400,12 @@ func (c *workloadMetricsCollector) collectResourceRequestMetrics(pods []*corev1.
 				ramTotalRequest[containerName] = 0
 			}
 			ramTotalRequest[containerName] += value
+		}
+		for containerName, value := range gpu {
+			if _, ok := gpuTotalRequest[containerName]; !ok {
+				gpuTotalRequest[containerName] = 0
+			}
+			gpuTotalRequest[containerName] += value
 		}
 	}
 
@@ -414,6 +420,12 @@ func (c *workloadMetricsCollector) collectResourceRequestMetrics(pods []*corev1.
 		labels[values.ContainerNameLabelKey] = containerName
 		ch <- prometheus.MustNewConstMetric(workloadResourceRequestDesc,
 			prometheus.GaugeValue, ram, utils.ConvertPrometheusLabelValuesInOrder(workloadCRCareLabelKey, labels)...)
+	}
+	labels[values.ResourceTypeLabelKey] = string(values.ResourceGPU)
+	for containerName, gpu := range gpuTotalRequest {
+		labels[values.ContainerNameLabelKey] = containerName
+		ch <- prometheus.MustNewConstMetric(workloadResourceRequestDesc,
+			prometheus.GaugeValue, gpu, utils.ConvertPrometheusLabelValuesInOrder(workloadCRCareLabelKey, labels)...)
 	}
 }
 

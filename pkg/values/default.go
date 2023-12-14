@@ -16,7 +16,11 @@ limitations under the License.
 
 package values
 
-import "time"
+import (
+	"time"
+
+	v1 "k8s.io/api/core/v1"
+)
 
 const (
 	KubeFinNamespace = "kubefin"
@@ -58,10 +62,34 @@ const (
 	CustomCPUCoreHourPriceEnv = "CUSTOM_CPU_CORE_HOUR_PRICE"
 	CustomRAMGBHourPriceEnv   = "CUSTOM_RAM_GB_HOUR_PRICE"
 
+	// CustomGPUCardHourPriceEnv indicates price per hour for an nvidia GPU card,
+	// and it does not distinguish the specific device of the GPU card.
+	// Because Kubernetes treats extended resources such as GPU as scalar resources by default.
+	// Whether it is T4 or A100, it's regarded as one "nvidia.com/gpu" resource.
+	CustomGPUCardHourPriceEnv = "CUSTOM_GPU_CARD_HOUR_PRICE"
+	// CustomGPUDeviceLabelKeyEnv indicates the key of label which indicates the type of GPUs.
+	// If different nodes in the cluster have different types of GPUs,
+	// Kubernetes recommends using Node Labels and Node Selectors to schedule pods to appropriate nodes.
+	// See https://kubernetes.io/docs/tasks/manage-gpus/scheduling-gpus/#clusters-containing-different-types-of-gpus.
+	// Kubefin supports using user-specified labels to identify specific GPU devices and calculate their prices.
+	// You can also use GPU feature discovery to implement automatic node labelling.
+	// See details in https://github.com/NVIDIA/gpu-feature-discovery/blob/main/README.md.
+	CustomGPUDeviceLabelKeyEnv = "CUSTOM_GPU_DEVICE_LABEL_KEY"
+	// CustomGPUDevicePriceListEnv indicates price list of different types of GPUs.
+	// It will use ";" to separate different device items and use ":" to separate device name and price per hour.
+	// CustomGPUDevicePriceListEnv needs to be used together with CustomGPUDeviceLabelKeyEnv.
+	// Example:
+	// A100:12;T4:15
+	CustomGPUDevicePriceListEnv = "CUSTOM_GPU_DEVICE_PRICE_LIST"
+
 	MultiTenantHeader       = "X-Scope-OrgID"
 	ClusterIdQueryParameter = "cluster_id"
 
 	DefaultStepSeconds = 3600
 	// DefaultDetailStepSeconds is used to show the fine-grained line chart of cpu/memory data
 	DefaultDetailStepSeconds = 600
+)
+
+const (
+	ResourceGPU = v1.ResourceName("nvidia.com/gpu")
 )
