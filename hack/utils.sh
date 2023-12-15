@@ -14,6 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+KUBEFIN_GO_PACKAGE="github.com/kubefin/kubefin"
+
+KUBEFIN_TARGET_SOURCE=(
+  kubefin-agent=cmd/kubefin-agent
+  kubefin-cost-analyzer=cmd/kubefin-cost-analyzer
+)
+
 function get_mimir_server_ip() {
   kubeconfig=$1
   server_node_ip=$(kubectl get node --kubeconfig="${kubeconfig}" -ojson | jq .items[0].status.addresses[0].address | sed 's/"//g')
@@ -109,4 +116,39 @@ function create_gopath_tree() {
   if [[ ! -e "${go_pkg_dir}" || "$(readlink "${go_pkg_dir}")" != "${repo_root}" ]]; then
     ln -snf "${repo_root}" "${go_pkg_dir}"
   fi
+}
+
+function get_target_source() {
+  local target=$1
+  for s in "${KUBEFIN_TARGET_SOURCE[@]}"; do
+    if [[ "$s" == ${target}=* ]]; then
+      echo "${s##${target}=}"
+      return
+    fi
+  done
+}
+
+function version_ldflags() {
+  # Git information
+  GIT_VERSION=$(get_version)
+  GIT_COMMIT_HASH=$(git rev-parse HEAD)
+  if git_status=$(git status --porcelain 2>/dev/null) && [[ -z ${git_status} ]]; then
+    GIT_TREESTATE="clean"
+  else
+    GIT_TREESTATE="dirty"
+  fi
+  BUILDDATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+  LDFLAGS="-X github.com/kubefin/kubefin/pkg/version.gitVersion=${GIT_VERSION} \
+                        -X github.com/kubefin/kubefin/pkg/version.gitCommit=${GIT_COMMIT_HASH} \
+                        -X github.com/kubefin/kubefin/pkg/version.gitTreeState=${GIT_TREESTATE} \
+                        -X github.com/kubefin/kubefin/pkg/version.buildDate=${BUILDDATE}"
+  echo $LDFLAGS
+}
+
+function get_version() {
+  git describe --tags --dirty
+}
+
+function host_platform() {
+  echo "$(go env GOHOSTOS)/$(go env GOHOSTARCH)"
 }
