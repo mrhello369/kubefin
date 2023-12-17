@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM node:18 as build
+FROM node:20 as build
 
 # Create app directory
 WORKDIR /app
@@ -20,10 +20,14 @@ WORKDIR /app
 COPY web/package*.json ./
 
 # With this registry, we can install dependencies faster.
-RUN npm config set registry https://registry.npm.taobao.org \
-    && npm install
+# Referring: https://github.com/npm/cli/issues/4553#issuecomment-1196453677
+# Build failure: https://github.com/nodejs/docker-node/issues/1668#issuecomment-1528842819
+RUN npm cache clean --force \
+    && npm install -g npm@latest \
+    && npm config set registry https://registry.npm.taobao.org \
+    && npm ci
 
-COPY  web/ ./
+COPY web/ ./
 
 RUN npm run build
 
