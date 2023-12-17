@@ -49,6 +49,13 @@ spec:
             requests:
               cpu: 250m
               memory: 750Mi
+          volumeMounts:
+          - mountPath: /etc/grafana/provisioning/datasources
+            name: grafana-datasources
+      volumes:
+        - name: grafana-datasources
+          configMap:
+            name: grafana-datasources
 ---
 apiVersion: v1
 kind: Service

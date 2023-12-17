@@ -36,10 +36,10 @@ spec:
             memory: 1Gi
         terminationMessagePolicy: FallbackToLogsOnError
         volumeMounts:
-            - mountPath: /etc/mimir/config.yaml
-              name: mimir-config
-              subPath: config.yaml
-              readOnly: true
+          - mountPath: /etc/mimir/config.yaml
+            name: mimir-config
+            subPath: config.yaml
+            readOnly: true
         readinessProbe:
           httpGet:
             path: /ready
