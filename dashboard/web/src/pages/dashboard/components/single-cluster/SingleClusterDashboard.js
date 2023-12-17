@@ -73,9 +73,9 @@ export function SingleClusterDashboard() {
     const fetchClusterData = async () => {
       await Promise.all([
         apiClient.get("/costs/clusters/" + clusterId + "/summary"),
-        apiClient.get("/metrics/clusters/" + clusterId + "/summary"),
-        apiClient.get("/metrics/clusters/" + clusterId + "/cpu"),
-        apiClient.get("/metrics/clusters/" + clusterId + "/memory"),
+        apiClient.get("/resources/clusters/" + clusterId + "/summary"),
+        apiClient.get("/resources/clusters/" + clusterId + "/cpu"),
+        apiClient.get("/resources/clusters/" + clusterId + "/memory"),
       ])
         .then((data) => {
           console.log("data=",data)

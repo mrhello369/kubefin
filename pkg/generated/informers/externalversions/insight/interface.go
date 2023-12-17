@@ -19,8 +19,8 @@ limitations under the License.
 package insight
 
 import (
-	v1alpha1 "github.com/kubefin/kubefin/pkg/generated/informers/externalversions/insight/v1alpha1"
-	internalinterfaces "github.com/kubefin/kubefin/pkg/generated/informers/externalversions/internalinterfaces"
+	v1alpha1 "kubefin.dev/kubefin/pkg/generated/informers/externalversions/insight/v1alpha1"
+	internalinterfaces "kubefin.dev/kubefin/pkg/generated/informers/externalversions/internalinterfaces"
 )
 
 // Interface provides access to each of this group's versions.

@@ -22,8 +22,8 @@ import (
 	listercorev1 "k8s.io/client-go/listers/core/v1"
 	"k8s.io/klog/v2"
 
-	"github.com/kubefin/kubefin/pkg/cloudprice"
-	"github.com/kubefin/kubefin/pkg/values"
+	"kubefin.dev/kubefin/pkg/cloudprice"
+	"kubefin.dev/kubefin/pkg/values"
 )
 
 func ParsePodResourceRequest(pod *v1.Pod, scheduled bool) (cpu, ram, gpu map[string]float64) {

@@ -39,9 +39,9 @@ spec:
         - name: kubefin-cost-analyzer
           # This is the Go import path for the binary that is containerized
           # and substituted here.
-          image: ko://github.com/kubefin/kubefin/cmd/kubefin-cost-analyzer
+          image: ko://kubefin.dev/kubefin/cmd/kubefin-cost-analyzer
           args:
-            - --v=6
+            - --v=4
           env:
             - name: QUERY_BACKEND_ENDPOINT
               value: "http://mimir.kubefin.svc.cluster.local:9009/prometheus"

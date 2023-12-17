@@ -28,12 +28,12 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/klog/v2"
 
-	"github.com/kubefin/kubefin/cmd/kubefin-agent/app/options"
-	"github.com/kubefin/kubefin/pkg/api"
-	"github.com/kubefin/kubefin/pkg/cloudprice"
-	metricscache "github.com/kubefin/kubefin/pkg/metrics/cache"
-	"github.com/kubefin/kubefin/pkg/utils"
-	"github.com/kubefin/kubefin/pkg/values"
+	"kubefin.dev/kubefin/cmd/kubefin-agent/app/options"
+	"kubefin.dev/kubefin/pkg/api"
+	"kubefin.dev/kubefin/pkg/cloudprice"
+	metricscache "kubefin.dev/kubefin/pkg/metrics/cache"
+	"kubefin.dev/kubefin/pkg/utils"
+	"kubefin.dev/kubefin/pkg/values"
 )
 
 var (

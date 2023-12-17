@@ -23,10 +23,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"k8s.io/klog/v2"
 
-	"github.com/kubefin/kubefin/pkg/api"
-	"github.com/kubefin/kubefin/pkg/server/implementation"
-	"github.com/kubefin/kubefin/pkg/utils"
-	"github.com/kubefin/kubefin/pkg/values"
+	"kubefin.dev/kubefin/pkg/api"
+	"kubefin.dev/kubefin/pkg/server/implementation"
+	"kubefin.dev/kubefin/pkg/utils"
+	"kubefin.dev/kubefin/pkg/values"
 )
 
 // ClusterWorkloadsCostsHandler  godoc

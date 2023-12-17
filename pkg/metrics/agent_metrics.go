@@ -19,12 +19,12 @@ package metrics
 import (
 	"context"
 
-	"github.com/kubefin/kubefin/cmd/kubefin-agent/app/options"
-	"github.com/kubefin/kubefin/pkg/api"
-	"github.com/kubefin/kubefin/pkg/cloudprice"
-	metricscache "github.com/kubefin/kubefin/pkg/metrics/cache"
-	"github.com/kubefin/kubefin/pkg/metrics/core"
-	"github.com/kubefin/kubefin/pkg/metrics/types"
+	"kubefin.dev/kubefin/cmd/kubefin-agent/app/options"
+	"kubefin.dev/kubefin/pkg/api"
+	"kubefin.dev/kubefin/pkg/cloudprice"
+	metricscache "kubefin.dev/kubefin/pkg/metrics/cache"
+	"kubefin.dev/kubefin/pkg/metrics/core"
+	"kubefin.dev/kubefin/pkg/metrics/types"
 )
 
 func RegisterAgentMetricsCollector(ctx context.Context,

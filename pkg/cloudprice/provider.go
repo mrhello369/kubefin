@@ -26,21 +26,24 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog/v2"
 
-	"github.com/kubefin/kubefin/cmd/kubefin-agent/app/options"
-	"github.com/kubefin/kubefin/pkg/api"
-	"github.com/kubefin/kubefin/pkg/cloudprice/ack"
-	"github.com/kubefin/kubefin/pkg/cloudprice/defaultcloud"
+	"kubefin.dev/kubefin/cmd/kubefin-agent/app/options"
+	"kubefin.dev/kubefin/pkg/api"
+	"kubefin.dev/kubefin/pkg/cloudprice/ack"
+	"kubefin.dev/kubefin/pkg/cloudprice/defaultcloud"
+	"kubefin.dev/kubefin/pkg/cloudprice/eks"
 )
 
 type CloudProviderInterface interface {
 	GetNodeHourlyPrice(node *v1.Node) (*api.InstancePriceInfo, error)
-	ParseClusterInfo(agentOptions *options.AgentOptions) error
+	Start(ctx context.Context)
 }
 
 func NewCloudProvider(client kubernetes.Interface, agentOptions *options.AgentOptions) (CloudProviderInterface, error) {
 	switch agentOptions.CloudProvider {
-	case api.CloudProviderAck:
-		return ack.NewAckCloudProvider(client, agentOptions)
+	case api.CloudProviderACK:
+		return ack.NewACKCloudProvider(client, agentOptions)
+	case api.CloudProviderEKS:
+		return eks.NewEKSCloudProvider(client, agentOptions)
 	case api.CloudProviderAuto:
 		// If config cloud provider is empty or cannot retrieve, checking it automatically
 		return initCloudProviderAuto(client, agentOptions)
@@ -60,7 +63,7 @@ func initCloudProviderAuto(client kubernetes.Interface, agentOptions *options.Ag
 
 	cloudProviderID := strings.ToLower(nodes.Items[0].Spec.ProviderID)
 	if strings.HasPrefix(cloudProviderID, "aws") {
-		klog.Warning("KubeFin doesn't support AWS yet, default pricing data will be used")
+		return eks.NewEKSCloudProvider(client, agentOptions)
 	}
 	if strings.HasPrefix(cloudProviderID, "gce") {
 		klog.Warning("KubeFin doesn't support GCE yet, default pricing data will be used")

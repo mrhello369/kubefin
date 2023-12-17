@@ -19,9 +19,9 @@ limitations under the License.
 package fake
 
 import (
-	v1alpha1 "github.com/kubefin/kubefin/pkg/generated/clientset/versioned/typed/insight/v1alpha1"
 	rest "k8s.io/client-go/rest"
 	testing "k8s.io/client-go/testing"
+	v1alpha1 "kubefin.dev/kubefin/pkg/generated/clientset/versioned/typed/insight/v1alpha1"
 )
 
 type FakeInsightV1alpha1 struct {

@@ -43,38 +43,38 @@ echo "Generating with deepcopy-gen"
 deepcopy-gen \
   --output-file-base zz_generated.deepcopy \
   --go-header-file "${boilerplate}" \
-  --input-dirs github.com/kubefin/kubefin/pkg/apis/insight/v1alpha1
+  --input-dirs kubefin.dev/kubefin/pkg/apis/insight/v1alpha1
 
 echo "Generating with register-gen"
 register-gen \
   --output-file-base zz_generated.register \
   --go-header-file "${boilerplate}" \
-  --input-dirs github.com/kubefin/kubefin/pkg/apis/insight/v1alpha1
+  --input-dirs kubefin.dev/kubefin/pkg/apis/insight/v1alpha1
 
 echo "Generating with conversion-gen"
 conversion-gen \
   -O zz_generated.conversion \
   --go-header-file "${boilerplate}" \
-  --input-dirs github.com/kubefin/kubefin/pkg/apis/insight/v1alpha1
+  --input-dirs kubefin.dev/kubefin/pkg/apis/insight/v1alpha1
 
 echo "Generating with client-gen"
 client-gen \
   --go-header-file "${boilerplate}" \
   --input-base "" \
-  --input github.com/kubefin/kubefin/pkg/apis/insight/v1alpha1 \
-  --output-package github.com/kubefin/kubefin/pkg/generated/clientset \
+  --input kubefin.dev/kubefin/pkg/apis/insight/v1alpha1 \
+  --output-package kubefin.dev/kubefin/pkg/generated/clientset \
   --clientset-name versioned
 
 echo "Generating with lister-gen"
 lister-gen \
   --go-header-file "${boilerplate}" \
-  --input-dirs github.com/kubefin/kubefin/pkg/apis/insight/v1alpha1 \
-  --output-package github.com/kubefin/kubefin/pkg/generated/listers
+  --input-dirs kubefin.dev/kubefin/pkg/apis/insight/v1alpha1 \
+  --output-package kubefin.dev/kubefin/pkg/generated/listers
 
 echo "Generating with informer-gen"
 informer-gen \
   --go-header-file "${boilerplate}" \
-  --input-dirs github.com/kubefin/kubefin/pkg/apis/insight/v1alpha1 \
-  --versioned-clientset-package github.com/kubefin/kubefin/pkg/generated/clientset/versioned \
-  --listers-package github.com/kubefin/kubefin/pkg/generated/listers \
-  --output-package github.com/kubefin/kubefin/pkg/generated/informers
+  --input-dirs kubefin.dev/kubefin/pkg/apis/insight/v1alpha1 \
+  --versioned-clientset-package kubefin.dev/kubefin/pkg/generated/clientset/versioned \
+  --listers-package kubefin.dev/kubefin/pkg/generated/listers \
+  --output-package kubefin.dev/kubefin/pkg/generated/informers

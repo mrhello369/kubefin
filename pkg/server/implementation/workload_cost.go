@@ -26,9 +26,9 @@ import (
 	"k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/klog/v2"
 
-	"github.com/kubefin/kubefin/pkg/api"
-	"github.com/kubefin/kubefin/pkg/query"
-	"github.com/kubefin/kubefin/pkg/values"
+	"kubefin.dev/kubefin/pkg/api"
+	"kubefin.dev/kubefin/pkg/query"
+	"kubefin.dev/kubefin/pkg/values"
 )
 
 func generatePodNamespaceNameKey(labels model.Metric) string {
@@ -250,7 +250,7 @@ func queryPodResourceRequest(tenantId, clusterId string,
 	promql := fmt.Sprintf(query.QlPodResourceRequestFromClusterWithTimeRange, clusterId, stepSeconds)
 	ret, err := query.GetPromQueryClient().WithTenantId(tenantId).QueryRangeWithStep(promql, start, end, stepSeconds)
 	if err != nil {
-		klog.Errorf("Query cluster(%s) pod resource request error:%v", err)
+		klog.Errorf("Query cluster(%s) pod resource request error:%v", clusterId, err)
 		return nil, nil, err
 	}
 	for _, pod := range ret {
@@ -279,7 +279,7 @@ func queryPodResourceUsage(tenantId, clusterId string,
 	promql := fmt.Sprintf(query.QlPodResourceUsageFromClusterWithTimeRange, clusterId, stepSeconds)
 	ret, err := query.GetPromQueryClient().WithTenantId(tenantId).QueryRangeWithStep(promql, start, end, stepSeconds)
 	if err != nil {
-		klog.Errorf("Query cluster(%s) pod resoruce usage error:%v", err)
+		klog.Errorf("Query cluster(%s) pod resoruce usage error:%v", clusterId, err)
 		return nil, nil, err
 	}
 	for _, pod := range ret {
@@ -463,7 +463,7 @@ func queryHighLevelWorkloadTotalCost(tenantId, clusterId, queryRe string, start,
 	promql := fmt.Sprintf(query.QlWorkloadTotalCostFromClusterWithTimeRange, clusterId, queryRe, stepSeconds)
 	ret, err := query.GetPromQueryClient().WithTenantId(tenantId).QueryRangeWithStep(promql, start, end, stepSeconds)
 	if err != nil {
-		klog.Errorf("Query cluster(%s) total workload costs error:%v", err)
+		klog.Errorf("Query cluster(%s) total workload costs error:%v", clusterId, err)
 		return nil, err
 	}
 	for _, workload := range ret {
@@ -481,7 +481,7 @@ func queryHighLevelWorkloadPodCount(tenantId, clusterId, queryRe string, start, 
 	promql := fmt.Sprintf(query.QlWorkloadPodFromClusterWithTimeRange, clusterId, queryRe, stepSeconds)
 	ret, err := query.GetPromQueryClient().WithTenantId(tenantId).QueryRangeWithStep(promql, start, end, stepSeconds)
 	if err != nil {
-		klog.Errorf("Query cluster(%s) pod count error:%v", err)
+		klog.Errorf("Query cluster(%s) pod count error:%v", clusterId, err)
 		return nil, err
 	}
 	for _, workload := range ret {
@@ -501,7 +501,7 @@ func queryHighLevelWorkloadResourceRequest(tenantId, clusterId, queryRe string,
 	promql := fmt.Sprintf(query.QlWorkloadResourceRequestFromClusterWithTimeRange, clusterId, queryRe, stepSeconds)
 	ret, err := query.GetPromQueryClient().WithTenantId(tenantId).QueryRangeWithStep(promql, start, end, stepSeconds)
 	if err != nil {
-		klog.Errorf("Query cluster(%s) resource request error:%v", err)
+		klog.Errorf("Query cluster(%s) resource request error:%v", clusterId, err)
 		return nil, nil, err
 	}
 	for _, workload := range ret {
@@ -531,7 +531,7 @@ func queryHighLevelWorkloadResourceUsage(tenantId, clusterId, queryRe string,
 	promql := fmt.Sprintf(query.QlWorkloadResourceUsageFromClusterWithTimeRange, clusterId, queryRe, stepSeconds)
 	ret, err := query.GetPromQueryClient().WithTenantId(tenantId).QueryRangeWithStep(promql, start, end, stepSeconds)
 	if err != nil {
-		klog.Errorf("Query cluster(%s) resource usage error:%v", err)
+		klog.Errorf("Query cluster(%s) resource usage error:%v", clusterId, err)
 		return nil, nil, err
 	}
 	for _, workload := range ret {

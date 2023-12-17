@@ -19,7 +19,9 @@ WORKDIR /app
 
 COPY web/package*.json ./
 
-RUN npm install
+# With this registry, we can install dependencies faster.
+RUN npm config set registry https://registry.npm.taobao.org \
+    && npm install
 
 COPY  web/ ./
 

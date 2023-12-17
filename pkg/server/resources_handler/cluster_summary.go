@@ -23,9 +23,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"k8s.io/klog/v2"
 
-	"github.com/kubefin/kubefin/pkg/api"
-	implementation "github.com/kubefin/kubefin/pkg/server/implementation"
-	"github.com/kubefin/kubefin/pkg/utils"
+	"kubefin.dev/kubefin/pkg/api"
+	implementation "kubefin.dev/kubefin/pkg/server/implementation"
+	"kubefin.dev/kubefin/pkg/utils"
 )
 
 // ClustersResourcesSummaryHandler godoc

@@ -25,7 +25,7 @@ import (
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
 	baseconfig "k8s.io/component-base/config"
 
-	"github.com/kubefin/kubefin/pkg/values"
+	"kubefin.dev/kubefin/pkg/values"
 )
 
 type AgentOptions struct {

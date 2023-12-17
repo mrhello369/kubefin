@@ -21,13 +21,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kubefin/kubefin/cmd/kubefin-agent/app/options"
-	"github.com/kubefin/kubefin/pkg/metrics/types"
-	"github.com/kubefin/kubefin/pkg/utils"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog/v2"
 	"k8s.io/metrics/pkg/client/clientset/versioned"
+	"kubefin.dev/kubefin/cmd/kubefin-agent/app/options"
+	"kubefin.dev/kubefin/pkg/metrics/types"
+	"kubefin.dev/kubefin/pkg/utils"
 )
 
 type ResourceUsageMetric struct {

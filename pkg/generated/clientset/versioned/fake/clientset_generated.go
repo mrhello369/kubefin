@@ -19,14 +19,14 @@ limitations under the License.
 package fake
 
 import (
-	clientset "github.com/kubefin/kubefin/pkg/generated/clientset/versioned"
-	insightv1alpha1 "github.com/kubefin/kubefin/pkg/generated/clientset/versioned/typed/insight/v1alpha1"
-	fakeinsightv1alpha1 "github.com/kubefin/kubefin/pkg/generated/clientset/versioned/typed/insight/v1alpha1/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"
 	fakediscovery "k8s.io/client-go/discovery/fake"
 	"k8s.io/client-go/testing"
+	clientset "kubefin.dev/kubefin/pkg/generated/clientset/versioned"
+	insightv1alpha1 "kubefin.dev/kubefin/pkg/generated/clientset/versioned/typed/insight/v1alpha1"
+	fakeinsightv1alpha1 "kubefin.dev/kubefin/pkg/generated/clientset/versioned/typed/insight/v1alpha1/fake"
 )
 
 // NewSimpleClientset returns a clientset that will respond with the provided objects.

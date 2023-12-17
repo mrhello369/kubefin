@@ -23,13 +23,13 @@ import (
 	sync "sync"
 	time "time"
 
-	versioned "github.com/kubefin/kubefin/pkg/generated/clientset/versioned"
-	insight "github.com/kubefin/kubefin/pkg/generated/informers/externalversions/insight"
-	internalinterfaces "github.com/kubefin/kubefin/pkg/generated/informers/externalversions/internalinterfaces"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
+	versioned "kubefin.dev/kubefin/pkg/generated/clientset/versioned"
+	insight "kubefin.dev/kubefin/pkg/generated/informers/externalversions/insight"
+	internalinterfaces "kubefin.dev/kubefin/pkg/generated/informers/externalversions/internalinterfaces"
 )
 
 // SharedInformerOption defines the functional option type for SharedInformerFactory.

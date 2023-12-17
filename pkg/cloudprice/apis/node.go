@@ -23,4 +23,5 @@ const (
 type NodeSpec struct {
 	CPUCount   float64
 	RAMGBCount float64
+	Price      float64
 }

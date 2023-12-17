@@ -16,7 +16,7 @@ limitations under the License.
 
 package query
 
-import "github.com/kubefin/kubefin/pkg/values"
+import "kubefin.dev/kubefin/pkg/values"
 
 var (
 	QlSumNodesResourceTotalFromCluster       = "sum(" + values.NodeResourceTotalMetricsName + "{cluster_id='%s',resource='%s'})"

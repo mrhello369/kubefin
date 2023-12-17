@@ -21,7 +21,7 @@ import (
 	v1 "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
 
-	insightlister "github.com/kubefin/kubefin/pkg/generated/listers/insight/v1alpha1"
+	insightlister "kubefin.dev/kubefin/pkg/generated/listers/insight/v1alpha1"
 )
 
 type InstancePriceInfo struct {
