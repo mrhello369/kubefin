@@ -1,0 +1,22 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources
+  namespace: kubefin
+data:
+  datasources.yaml: |-
+    {
+        "apiVersion": 1,
+        "datasources": [
+            {
+                "access": "proxy",
+                "editable": false,
+                "name": "kubefin",
+                "orgId": 1,
+                "type": "prometheus",
+                "url": "http://mimir.kubefin.svc.cluster.local:9009/prometheus",
+                "version": 1
+            }
+        ]
+    }
