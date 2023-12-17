@@ -43,13 +43,6 @@ spec:
         image: {KUBEFIN_AGENT_IMAGE}
         args:
           - --v=4 # debug level log
-        resources:
-          requests:
-            cpu: 500m
-            memory: 1000Mi
-          limits:
-            cpu: 500m
-            memory: 1000Mi
         env:
           # If configure as default, it will detect the cloud provider automatically
           - name: CLOUD_PROVIDER
@@ -93,12 +86,19 @@ spec:
             containerPort: 9090
           - name: metrics
             containerPort: 8080
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1000Mi
+          limits:
+            cpu: 500m
+            memory: 1000Mi
       - name: otel-collector
         image: otel/opentelemetry-collector-contrib:0.72.0
         resources:
           requests:
-            cpu: 500m
-            memory: 1500Mi
+            cpu: 100m
+            memory: 100Mi
         volumeMounts:
           - mountPath: /etc/otelcol-contrib/config.yaml
             name: otel-collector-config

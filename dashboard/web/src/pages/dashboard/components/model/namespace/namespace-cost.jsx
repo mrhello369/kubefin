@@ -3,13 +3,13 @@ export class NamespaceCostInfo {
       namespace,
       podCount,
       cpuRequest,
-      ramGBRequest,
+      ramGiBRequest,
       totalCost
     ) {
       this.namespace = namespace;
       this.podCount = podCount;
       this.cpuRequest = cpuRequest;
-      this.ramGBRequest = ramGBRequest;
+      this.ramGiBRequest = ramGiBRequest;
       this.totalCost=totalCost;
   }
 }

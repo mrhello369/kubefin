@@ -37,26 +37,26 @@ export function NamespaceCostHeader(props) {
           let podCountIndex = 0;
           let cpuRequest = 0;
           let cpuRequestIndex = 0;
-          let ramGBRequest = 0;
-          let ramGBRequestIndex = 0;
+          let ramGiBRequest = 0;
+          let ramGiBRequestIndex = 0;
           let totalCost = 0;
 
           element.costList.map((cost) => {
             podCount += cost.podCount === undefined ? 0 : cost.podCount;
             cpuRequest += cost.cpuRequest === undefined ? 0 : cost.cpuRequest;
-            ramGBRequest +=
-              cost.ramGBRequest === undefined ? 0 : cost.ramGBRequest;
+            ramGiBRequest +=
+              cost.ramGiBRequest === undefined ? 0 : cost.ramGiBRequest;
             totalCost += cost.totalCost === undefined ? 0 : cost.totalCost;
 
             podCountIndex += 1.0;
             cpuRequestIndex += 1.0;
-            ramGBRequestIndex += 1.0;
+            ramGiBRequestIndex += 1.0;
           });
 
           nsCostInfo.namespace = namespace
           nsCostInfo.podCount = podCount / podCountIndex;
           nsCostInfo.cpuRequest = cpuRequest / cpuRequestIndex;
-          nsCostInfo.ramGBRequest = ramGBRequest / ramGBRequestIndex;
+          nsCostInfo.ramGiBRequest = ramGiBRequest / ramGiBRequestIndex;
           nsCostInfo.totalCost = totalCost;
 
           nsCostMap.set(namespace, nsCostInfo);

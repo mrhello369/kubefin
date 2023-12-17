@@ -55,8 +55,8 @@ export function ClusterCostHeader(props) {
               element.cpuCoreCount,
               element.cpuCoreUsage,
               element.cpuCost,
-              element.ramGBCount,
-              element.ramGBUsage,
+              element.ramGiBCount,
+              element.ramGiBUsage,
               element.ramCost,
             )
           )

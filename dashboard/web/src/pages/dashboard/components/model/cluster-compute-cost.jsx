@@ -8,7 +8,7 @@ export class ClusterComputeCost {
       cpuCoreCount,
       cpuCoreUsage,
       cpuCost,
-      ramGBCount,
+      ramGiBCount,
       ramUsage,
       ramCost,
     ) {
@@ -20,7 +20,7 @@ export class ClusterComputeCost {
       this.cpuCoreCount = cpuCoreCount;
       this.cpuCoreUsage = cpuCoreUsage;
       this.cpuCost = cpuCost;
-      this.ramGBCount = ramGBCount;
+      this.ramGiBCount = ramGiBCount;
       this.ramUsage = ramUsage;
       this.ramCost = ramCost;
     }
