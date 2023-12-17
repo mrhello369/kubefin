@@ -37,9 +37,9 @@ export default function ClusterComputeCostList(props) {
       item[1].cpuCoreCountIndex,
       keepTwoDecimal(item[1].cpuCoreUsage),
       keepTwoDecimal(item[1].cpuCost),
-      keepTwoDecimal(item[1].ramGBCount),
-      item[1].ramGBCountIndex,
-      keepTwoDecimal(item[1].ramGBUsage),
+      keepTwoDecimal(item[1].ramGiBCount),
+      item[1].ramGiBCountIndex,
+      keepTwoDecimal(item[1].ramGiBUsage),
       keepTwoDecimal(item[1].ramCost),
     );
     return clusterComputeCostListItem;
@@ -60,7 +60,7 @@ export default function ClusterComputeCostList(props) {
         1.0,
         keepTwoDecimal(item.cpuCoreUsage),
         keepTwoDecimal(item.cpuCost),
-        keepTwoDecimal(item.ramGBCount),
+        keepTwoDecimal(item.ramGiBCount),
         1.0,
         keepTwoDecimal(item.ramUsage),
         keepTwoDecimal(item.ramCost),
@@ -93,8 +93,8 @@ export default function ClusterComputeCostList(props) {
         currentClusterComputeCostListItem.cpuCoreCount += clusterComputeCostListItem.cpuCoreCount;
         currentClusterComputeCostListItem.cpuCoreCountIndex += 1.0;
         currentClusterComputeCostListItem.ramCost += clusterComputeCostListItem.ramCost;
-        currentClusterComputeCostListItem.ramGBCount += clusterComputeCostListItem.ramGBCount;
-        currentClusterComputeCostListItem.ramGBCountIndex += 1.0;
+        currentClusterComputeCostListItem.ramGiBCount += clusterComputeCostListItem.ramGiBCount;
+        currentClusterComputeCostListItem.ramGiBCountIndex += 1.0;
         costMap.set(itemDay, currentClusterComputeCostListItem);
       } else {
         // If no entry exists, create a new entry with the cost sum

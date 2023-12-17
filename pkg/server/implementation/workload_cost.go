@@ -147,7 +147,7 @@ func parsePodTotalCost(podWorkloadCost map[string]map[int64]*api.ClusterWorkload
 }
 
 func parsePodResourceRequest(podWorkloadCost map[string]map[int64]*api.ClusterWorkloadCostDetail,
-	cpuRequest map[string]map[int64]float64, ramRequest map[string]map[int64]float64, stepSeconds int64) {
+	cpuRequest, ramRequest map[string]map[int64]float64, stepSeconds int64) {
 	for pod, details := range cpuRequest {
 		item, ok := podWorkloadCost[pod]
 		if !ok {
@@ -161,8 +161,8 @@ func parsePodResourceRequest(podWorkloadCost map[string]map[int64]*api.ClusterWo
 					// PodCount is always 1
 					PodCount: 1,
 				}
-				item[timeStamp].CPUCoreRequest = v / float64(stepSeconds) * values.HourInSeconds
 			}
+			item[timeStamp].CPUCoreRequest = v / float64(stepSeconds) * values.HourInSeconds
 		}
 	}
 

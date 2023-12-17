@@ -26,7 +26,7 @@ export default function NSCostTableList(props) {
         key,
         value.podCount.toFixed(2),
         value.cpuRequest.toFixed(2),
-        value.ramGBRequest.toFixed(2),
+        value.ramGiBRequest.toFixed(2),
         value.totalCost.toFixed(2)
       );
     }

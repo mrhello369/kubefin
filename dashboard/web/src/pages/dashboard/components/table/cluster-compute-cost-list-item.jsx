@@ -9,9 +9,9 @@ export class ClusterComputeCostListItem {
     cpuCoreCountIndex,
     cpuCoreUsage,
     cpuCost,
-    ramGBCount,
-    ramGBCountIndex,
-    ramGBUsage,
+    ramGiBCount,
+    ramGiBCountIndex,
+    ramGiBUsage,
     ramCost,
   ) {
     this.timestamp = timestamp ? timestamp : 0;
@@ -23,9 +23,9 @@ export class ClusterComputeCostListItem {
     this.cpuCoreCountIndex = cpuCoreCountIndex ? cpuCoreCountIndex : 1.0;
     this.cpuCoreUsage = cpuCoreUsage ? cpuCoreUsage : 0;
     this.cpuCost = cpuCost ? cpuCost : 0;
-    this.ramGBCount = ramGBCount ? ramGBCount : 0;
-    this.ramGBCountIndex = ramGBCountIndex ? ramGBCountIndex : 1.0;
-    this.ramGBUsage = ramGBUsage ? ramGBUsage : 0;
+    this.ramGiBCount = ramGiBCount ? ramGiBCount : 0;
+    this.ramGiBCountIndex = ramGiBCountIndex ? ramGiBCountIndex : 1.0;
+    this.ramGiBUsage = ramGiBUsage ? ramGiBUsage : 0;
     this.ramCost = ramCost ? ramCost : 0;
   }
 }

@@ -99,7 +99,7 @@ export const CLUSTER_COMPUTE_COST_COLUMN_DEFINITIONS = addColumnSortLabels([
     sortingField: "provisionedMEM",
     header: "Provisioned Memory",
     cell: (item) =>
-      keepTwoDecimal(item.ramGBCount / item.ramGBCountIndex),
+      keepTwoDecimal(item.ramGiBCount / item.ramGiBCountIndex),
     minWidth: 100,
   },
   {

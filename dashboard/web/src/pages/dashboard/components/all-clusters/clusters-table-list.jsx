@@ -31,7 +31,7 @@ export default function ClustersTableList(props) {
       if (metricsItem.clusterId === costItem.clusterId) {
         costItem.nodes = metricsItem.nodeNumbersCurrent;
         costItem.cpu = metricsItem.cpuCoreTotal;
-        costItem.memory = metricsItem.ramGBTotal;
+        costItem.memory = metricsItem.ramGiBTotal;
       }
     });
   });
