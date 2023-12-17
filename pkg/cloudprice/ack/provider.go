@@ -31,11 +31,10 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog/v2"
 
-	"github.com/kubefin/kubefin/cmd/kubefin-agent/app/options"
-	"github.com/kubefin/kubefin/pkg/api"
-	"github.com/kubefin/kubefin/pkg/cloudprice/apis"
-	cloudpriceapis "github.com/kubefin/kubefin/pkg/cloudprice/apis"
-	"github.com/kubefin/kubefin/pkg/values"
+	"kubefin.dev/kubefin/cmd/kubefin-agent/app/options"
+	"kubefin.dev/kubefin/pkg/api"
+	cloudpriceapis "kubefin.dev/kubefin/pkg/cloudprice/apis"
+	"kubefin.dev/kubefin/pkg/values"
 )
 
 const (
@@ -47,123 +46,126 @@ const (
 	nodeSpecQueryUrl  = "https://query.aliyun.com/rest/sell.ecs.allInstanceTypes?domain=aliyun&saleStrategy=PostPaid"
 )
 
-type AckCloudProvider struct {
+type ACKCloudProvider struct {
 	client kubernetes.Interface
 
 	cpuMemoryCostRatio float64
-
-	// nodePriceMap maps [region name][node type]price
-	nodePriceMap  map[string]map[string]float64
-	nodePriceLock sync.Mutex
+	region             string
 
 	// nodeSpecMap maps [node type]NodeSpec
 	nodeSpecMap  map[string]cloudpriceapis.NodeSpec
 	nodeSpecLock sync.Mutex
 }
 
-func NewAckCloudProvider(client kubernetes.Interface, agentOptions *options.AgentOptions) (*AckCloudProvider, error) {
-	var err error
+func NewACKCloudProvider(client kubernetes.Interface, agentOptions *options.AgentOptions) (*ACKCloudProvider, error) {
+	// We have no way to get the cluster name currently
+	if agentOptions.ClusterName == "" {
+		return nil, fmt.Errorf("please set the cluster name via env CLUSTER_NAME in agent manifest")
+	}
 
-	cpuMemoryCostRatio := apis.DefaultCPUMemoryCostRatio
+	nodes, err := client.CoreV1().Nodes().List(context.Background(), metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+	var clusterId string
+	for _, node := range nodes.Items {
+		labels := node.Labels
+		if len(labels) == 0 {
+			continue
+		}
+		if id, ok := labels[ackClusterIdLabelKey]; ok {
+			clusterId = id
+			break
+		}
+	}
+	if clusterId == "" {
+		return nil, fmt.Errorf("could not find cluster id")
+	}
+	agentOptions.ClusterId = clusterId
+
+	var region string
+	for _, node := range nodes.Items {
+		labels := node.Labels
+		if len(labels) == 0 {
+			continue
+		}
+		if rg, ok := labels[ackNodeRegionLabelKey]; ok {
+			region = rg
+			break
+		}
+	}
+	if region == "" {
+		return nil, fmt.Errorf("could not find region")
+	}
+
+	cpuMemoryCostRatio := cloudpriceapis.DefaultCPUMemoryCostRatio
 	if agentOptions.CPUMemoryCostRatio != "" {
 		cpuMemoryCostRatio, err = strconv.ParseFloat(agentOptions.CPUMemoryCostRatio, 64)
 		if err != nil {
 			return nil, err
 		}
 	}
-	ackCloud := AckCloudProvider{
-		client:             client,
-		cpuMemoryCostRatio: cpuMemoryCostRatio,
-		nodePriceMap:       map[string]map[string]float64{},
-		nodeSpecMap:        map[string]apis.NodeSpec{},
-	}
 
+	ackCloud := ACKCloudProvider{
+		client:             client,
+		region:             region,
+		cpuMemoryCostRatio: cpuMemoryCostRatio,
+		nodeSpecMap:        map[string]cloudpriceapis.NodeSpec{},
+	}
 	return &ackCloud, nil
 }
 
-func (c *AckCloudProvider) ParseClusterInfo(agentOptions *options.AgentOptions) error {
-	// We have no way to get the cluster name currently
-	if agentOptions.ClusterName == "" {
-		return fmt.Errorf("please set the cluster name via env CLUSTER_NAME in agent manifest")
-	}
-
-	if agentOptions.ClusterId != "" {
-		return nil
-	}
-
-	nodes, err := c.client.CoreV1().Nodes().List(context.Background(), metav1.ListOptions{})
-	if err != nil {
-		return err
-	}
-	for _, node := range nodes.Items {
-		labels := node.Labels
-		if clusterId, ok := labels[ackClusterIdLabelKey]; ok {
-			agentOptions.ClusterId = clusterId
-			break
-		}
-	}
-
-	return nil
+func (a *ACKCloudProvider) Start(ctx context.Context) {
 }
 
-func (c *AckCloudProvider) GetNodeHourlyPrice(node *v1.Node) (*api.InstancePriceInfo, error) {
+func (a *ACKCloudProvider) GetNodeHourlyPrice(node *v1.Node) (*api.InstancePriceInfo, error) {
 	if node.Labels == nil {
 		return nil, fmt.Errorf("node(%s) has no labels", node.Name)
 	}
 
-	nodeRegion, ok := node.Labels[ackNodeRegionLabelKey]
-	if !ok {
-		return nil, fmt.Errorf("node(%s) has no label %s", node.Name, ackNodeRegionLabelKey)
-	}
 	nodeType, ok := node.Labels[ackNodeTypeLabelKey]
 	if !ok {
 		return nil, fmt.Errorf("node(%s) has no label %s", node.Name, ackNodeTypeLabelKey)
 	}
 
-	var err error
+	a.nodeSpecLock.Lock()
+	defer a.nodeSpecLock.Unlock()
 
-	c.nodeSpecLock.Lock()
-	defer c.nodeSpecLock.Unlock()
-	nodeSpec, ok := c.nodeSpecMap[nodeType]
+	var err error
+	nodeSpec, ok := a.nodeSpecMap[nodeType]
 	if !ok {
-		err = queryNodeSpecFromCloud(c.nodeSpecMap)
+		a.nodeSpecMap, err = queryNodeSpecFromCloud()
 		if err != nil {
 			klog.Errorf("Query AliCloud ecs spec error:%v", err)
 			return nil, err
 		}
-		if nodeSpec, ok = c.nodeSpecMap[nodeType]; !ok {
+		if nodeSpec, ok = a.nodeSpecMap[nodeType]; !ok {
 			klog.Errorf("Could not find node type:%s", nodeType)
 			return nil, fmt.Errorf("could not find node type:%s", nodeType)
 		}
 	}
 
-	c.nodePriceLock.Lock()
-	defer c.nodePriceLock.Unlock()
-	_, ok = c.nodePriceMap[nodeRegion]
-	if !ok {
-		c.nodePriceMap[nodeRegion] = map[string]float64{}
-	}
-	nodePrice, ok := c.nodePriceMap[nodeRegion][nodeType]
-	if !ok {
-		nodePrice, err = queryNodePriceFromCloud(nodeRegion, nodeType)
+	if nodeSpec.Price <= 0 {
+		nodePrice, err := queryNodePriceFromCloud(a.region, nodeType)
 		if err != nil {
 			klog.Errorf("Query AliCloud ecs price error:%v", err)
 			return nil, err
 		}
-		c.nodePriceMap[nodeRegion][nodeType] = nodePrice
+		nodeSpec.Price = nodePrice
+		a.nodeSpecMap[nodeType] = nodeSpec
 	}
-	price := c.nodePriceMap[nodeRegion][nodeType]
+
 	return &api.InstancePriceInfo{
-		NodeTotalHourlyPrice: price,
+		NodeTotalHourlyPrice: nodeSpec.Price,
 		CPUCore:              nodeSpec.CPUCount,
-		CPUCoreHourlyPrice:   nodePrice * c.cpuMemoryCostRatio / (c.cpuMemoryCostRatio + 1),
+		CPUCoreHourlyPrice:   nodeSpec.Price * a.cpuMemoryCostRatio / (a.cpuMemoryCostRatio + 1),
 		RamGiB:               nodeSpec.RAMGBCount,
-		RAMGiBHourlyPrice:    nodePrice / (c.cpuMemoryCostRatio + 1),
+		RAMGiBHourlyPrice:    nodeSpec.Price / (a.cpuMemoryCostRatio + 1),
 		InstanceType:         nodeType,
 		BillingMode:          values.BillingModeOnDemand,
 		BillingPeriod:        0,
-		Region:               nodeRegion,
-		CloudProvider:        api.CloudProviderAck,
+		Region:               a.region,
+		CloudProvider:        api.CloudProviderACK,
 	}, nil
 }
 
@@ -202,29 +204,31 @@ func queryNodePriceFromCloud(nodeRegion, nodeType string) (float64, error) {
 	return priceResult.Data.Order.TradeAmount, nil
 }
 
-func queryNodeSpecFromCloud(nodeSpec map[string]cloudpriceapis.NodeSpec) error {
+func queryNodeSpecFromCloud() (map[string]cloudpriceapis.NodeSpec, error) {
 	resp, err := http.Get(nodeSpecQueryUrl)
 	if err != nil {
 		klog.Errorf("Query AliCloud ecs spec error:%v", err)
-		return err
+		return nil, err
 	}
 	defer resp.Body.Close()
+
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		klog.Errorf("Read response body error:%v", err)
-		return err
+		return nil, err
 	}
 
 	queryResult := &NodeSpecQueryResult{}
 	err = json.Unmarshal(data, queryResult)
 	if err != nil {
 		klog.Errorf("Unmarshal response body error:%v", err)
-		return err
+		return nil, err
 	}
 
+	ret := map[string]cloudpriceapis.NodeSpec{}
 	for _, instance := range queryResult.Data.Components.InstanceType.InstanceType {
 		nodeType := instance.InstanceTypeId
-		if _, ok := nodeSpec[nodeType]; !ok {
+		if _, ok := ret[nodeType]; !ok {
 			cpuCount, err := strconv.ParseFloat(instance.CPUCoreCount, 64)
 			if err != nil {
 				klog.Errorf("Can not parse cpu count(%s):%v", instance.CPUCoreCount, err)
@@ -232,19 +236,19 @@ func queryNodeSpecFromCloud(nodeSpec map[string]cloudpriceapis.NodeSpec) error {
 			memoryCount, err := strconv.ParseFloat(instance.MemorySize, 64)
 			if err != nil {
 				klog.Errorf("Can not parse memory count(%s):%v", instance.MemorySize, err)
-				return err
+				return nil, err
 			}
-			nodeSpec[nodeType] = cloudpriceapis.NodeSpec{
+			ret[nodeType] = cloudpriceapis.NodeSpec{
 				CPUCount:   cpuCount,
 				RAMGBCount: memoryCount,
 			}
 		}
 	}
-	return nil
+	return ret, nil
 }
 
 func newNodePriceQueryPara(instanceRegion, instanceType string) *TenantCalculator {
-	return &TenantCalculator{
+	calculator := &TenantCalculator{
 		Tenant: "TenantCalculator",
 		Configurations: []TenantCalculatorConfiguration{
 			{
@@ -274,4 +278,6 @@ func newNodePriceQueryPara(instanceRegion, instanceType string) *TenantCalculato
 			},
 		},
 	}
+
+	return calculator
 }

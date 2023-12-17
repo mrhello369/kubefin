@@ -16,14 +16,14 @@ limitations under the License.
 
 package ack
 
-type NodeSpecIno struct {
+type NodeSpecInfo struct {
 	InstanceTypeId string `json:"instanceTypeId"`
 	CPUCoreCount   string `json:"cpuCoreCount"`
 	MemorySize     string `json:"memorySize"`
 }
 
 type NodeSpecQueryResultInstanceType struct {
-	InstanceType []NodeSpecIno `json:"instance_type"`
+	InstanceType []NodeSpecInfo `json:"instance_type"`
 }
 
 type NodeSpecQueryResultComponent struct {

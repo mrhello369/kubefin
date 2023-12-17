@@ -25,8 +25,8 @@ const (
 	KubeFinStatusKind = "Status"
 	KubeFinListKind   = "List"
 
-	CloudProviderAck       = "ack"
-	CloudProviderEks       = "eks"
+	CloudProviderACK       = "ack"
+	CloudProviderEKS       = "eks"
 	CloudProviderOnPremise = "onpremise"
 	CloudProviderAuto      = "auto"
 )

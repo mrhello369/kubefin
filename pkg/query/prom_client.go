@@ -24,10 +24,10 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/prometheus/common/model"
 	"k8s.io/klog/v2"
 
-	"github.com/kubefin/kubefin/pkg/values"
-	"github.com/prometheus/common/model"
+	"kubefin.dev/kubefin/pkg/values"
 )
 
 const (

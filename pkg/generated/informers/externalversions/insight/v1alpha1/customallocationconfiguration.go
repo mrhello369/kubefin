@@ -22,14 +22,14 @@ import (
 	"context"
 	time "time"
 
-	insightv1alpha1 "github.com/kubefin/kubefin/pkg/apis/insight/v1alpha1"
-	versioned "github.com/kubefin/kubefin/pkg/generated/clientset/versioned"
-	internalinterfaces "github.com/kubefin/kubefin/pkg/generated/informers/externalversions/internalinterfaces"
-	v1alpha1 "github.com/kubefin/kubefin/pkg/generated/listers/insight/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
 	cache "k8s.io/client-go/tools/cache"
+	insightv1alpha1 "kubefin.dev/kubefin/pkg/apis/insight/v1alpha1"
+	versioned "kubefin.dev/kubefin/pkg/generated/clientset/versioned"
+	internalinterfaces "kubefin.dev/kubefin/pkg/generated/informers/externalversions/internalinterfaces"
+	v1alpha1 "kubefin.dev/kubefin/pkg/generated/listers/insight/v1alpha1"
 )
 
 // CustomAllocationConfigurationInformer provides access to a shared informer and lister for

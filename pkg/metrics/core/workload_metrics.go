@@ -32,16 +32,16 @@ import (
 	"k8s.io/client-go/restmapper"
 	"k8s.io/klog/v2"
 
-	"github.com/kubefin/kubefin/cmd/kubefin-agent/app/options"
-	"github.com/kubefin/kubefin/pkg/api"
-	insightv1alpha1 "github.com/kubefin/kubefin/pkg/apis/insight/v1alpha1"
-	"github.com/kubefin/kubefin/pkg/cloudprice"
-	insightlister "github.com/kubefin/kubefin/pkg/generated/listers/insight/v1alpha1"
-	metricscache "github.com/kubefin/kubefin/pkg/metrics/cache"
-	"github.com/kubefin/kubefin/pkg/metrics/types"
-	"github.com/kubefin/kubefin/pkg/reference"
-	"github.com/kubefin/kubefin/pkg/utils"
-	"github.com/kubefin/kubefin/pkg/values"
+	"kubefin.dev/kubefin/cmd/kubefin-agent/app/options"
+	"kubefin.dev/kubefin/pkg/api"
+	insightv1alpha1 "kubefin.dev/kubefin/pkg/apis/insight/v1alpha1"
+	"kubefin.dev/kubefin/pkg/cloudprice"
+	insightlister "kubefin.dev/kubefin/pkg/generated/listers/insight/v1alpha1"
+	metricscache "kubefin.dev/kubefin/pkg/metrics/cache"
+	"kubefin.dev/kubefin/pkg/metrics/types"
+	"kubefin.dev/kubefin/pkg/reference"
+	"kubefin.dev/kubefin/pkg/utils"
+	"kubefin.dev/kubefin/pkg/values"
 )
 
 var (
@@ -379,7 +379,7 @@ func (c *workloadMetricsCollector) parseCustomTargetToGVR(target insightv1alpha1
 	mapper := restmapper.NewDiscoveryRESTMapper(groupResources)
 	gvr, err := mapper.RESTMapping(gk, gv.Version)
 	if err != nil {
-		klog.V(4).Infof("Error getting GVR: %s", err.Error())
+		klog.V(6).Infof("Error getting GVR: %s", err.Error())
 		return schema.GroupVersionResource{}, err
 	}
 	return gvr.Resource, nil

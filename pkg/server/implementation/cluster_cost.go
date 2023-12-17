@@ -24,11 +24,11 @@ import (
 	"k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/klog/v2"
 
-	"github.com/kubefin/kubefin/pkg/api"
-	"github.com/kubefin/kubefin/pkg/query"
-	"github.com/kubefin/kubefin/pkg/utils"
-	"github.com/kubefin/kubefin/pkg/values"
 	"github.com/prometheus/common/model"
+	"kubefin.dev/kubefin/pkg/api"
+	"kubefin.dev/kubefin/pkg/query"
+	"kubefin.dev/kubefin/pkg/utils"
+	"kubefin.dev/kubefin/pkg/values"
 )
 
 func QueryAllClustersCurrentMonthCost(tenantId string) (map[string]*api.ClusterCostsSummary, error) {

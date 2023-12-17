@@ -17,7 +17,7 @@ limitations under the License.
 package utils
 
 import (
-	"github.com/kubefin/kubefin/pkg/api"
+	"kubefin.dev/kubefin/pkg/api"
 )
 
 func ValidateAllClustersMetricsSummary(clustersSummary *api.ClusterResourcesSummaryList) bool {

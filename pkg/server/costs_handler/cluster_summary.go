@@ -23,9 +23,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"k8s.io/klog/v2"
 
-	"github.com/kubefin/kubefin/pkg/api"
-	"github.com/kubefin/kubefin/pkg/server/implementation"
-	"github.com/kubefin/kubefin/pkg/utils"
+	"kubefin.dev/kubefin/pkg/api"
+	"kubefin.dev/kubefin/pkg/server/implementation"
+	"kubefin.dev/kubefin/pkg/utils"
 )
 
 // ClustersCostsSummaryHandler   godoc
@@ -93,7 +93,6 @@ func ClusterCostsSummaryHandler(ctx *gin.Context) {
 		return
 	}
 	summary.ClusterBasicProperty = *clusterProperty
-	klog.Infof("%v", summary)
 	bodyBytes, err := json.Marshal(summary)
 	if err != nil {
 		utils.ForwardStatusError(ctx, http.StatusInternalServerError,

@@ -20,8 +20,8 @@ set -o pipefail
 export KO_DOCKER_REPO=kind.local
 K8S_VERSION=${K8S_VERSION:-v1.27.3}
 TMP_DIR=$(mktemp -d)
-REPO_ROOT=$(dirname "${BASH_SOURCE[0]}")
-source "${REPO_ROOT}"/utils.sh
+REPO_ROOT=$(dirname "${BASH_SOURCE[0]}")/..
+source "${REPO_ROOT}"/hack/utils.sh
 
 SYS_ARCH=${SYS_ARCH:-linux/$(get_build_arch)}
 
@@ -52,6 +52,9 @@ then
   kind create cluster --name cluster-1 --kubeconfig=${HOME}/.kube/cluster-1.config --image kindest/node:"${K8S_VERSION}"
 fi
 
+# Build dashboard image for primary cluster
+docker build -f "${REPO_ROOT}"/dashboard/Dockerfile -t kubefin/kubefin-dashboard:devel "${REPO_ROOT}"/dashboard
+
 # Download necessary images(speed up the launch time)
 docker pull otel/opentelemetry-collector-contrib:0.72.0
 docker pull kubefin/kubefin-dashboard:latest
@@ -63,6 +66,7 @@ kind load docker-image otel/opentelemetry-collector-contrib:0.72.0 --name cluste
 kind load docker-image kubefin/kubefin-dashboard:latest --name kubefin-server
 kind load docker-image grafana/grafana:9.1.0 --name kubefin-server
 kind load docker-image grafana/mimir:2.6.0 --name kubefin-server
+kind load docker-image kubefin/kubefin-dashboard:devel --name kubefin-server
 
 # install metrics server
 echo_info "Start to install metrics server..."

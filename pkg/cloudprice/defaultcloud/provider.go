@@ -27,9 +27,9 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog/v2"
 
-	"github.com/kubefin/kubefin/cmd/kubefin-agent/app/options"
-	"github.com/kubefin/kubefin/pkg/api"
-	"github.com/kubefin/kubefin/pkg/values"
+	"kubefin.dev/kubefin/cmd/kubefin-agent/app/options"
+	"kubefin.dev/kubefin/pkg/api"
+	"kubefin.dev/kubefin/pkg/values"
 )
 
 const (
@@ -50,8 +50,11 @@ type DefaultCloudProvider struct {
 }
 
 func NewDefaultCloudProvider(client kubernetes.Interface, agentOptions *options.AgentOptions) (*DefaultCloudProvider, error) {
-	var err error
+	if agentOptions.ClusterName == "" {
+		return nil, fmt.Errorf("please set the cluster name via env CLUSTER_NAME in agent manifest")
+	}
 
+	var err error
 	cpuCoreHourlyPrice, ramGBHourlyPrice, gpuCardHourlyPrice := defaultCpuCoreHourlyPrice, defaultRamGBHourlyPrice, defaultGpuCardHourlyPrice
 	if agentOptions.CustomCPUCoreHourPrice != "" {
 		cpuCoreHourlyPrice, err = strconv.ParseFloat(agentOptions.CustomCPUCoreHourPrice, 64)
@@ -74,6 +77,14 @@ func NewDefaultCloudProvider(client kubernetes.Interface, agentOptions *options.
 		}
 	}
 
+	if agentOptions.ClusterId == "" {
+		systemNS, err := client.CoreV1().Namespaces().Get(context.Background(), metav1.NamespaceSystem, metav1.GetOptions{})
+		if err != nil {
+			return nil, err
+		}
+		agentOptions.ClusterId = string(systemNS.UID)
+	}
+
 	defaultCloud := DefaultCloudProvider{
 		client:               client,
 		CpuCoreHourlyPrice:   cpuCoreHourlyPrice,
@@ -84,26 +95,11 @@ func NewDefaultCloudProvider(client kubernetes.Interface, agentOptions *options.
 		GPUDeviceLabelKey:    agentOptions.CustomGPUDeviceLabelKey,
 		GPUDevicePriceList:   agentOptions.CustomGPUDevicePriceList,
 	}
-
 	return &defaultCloud, nil
 }
 
-func (c *DefaultCloudProvider) ParseClusterInfo(agentOptions *options.AgentOptions) error {
-	if agentOptions.ClusterName == "" {
-		return fmt.Errorf("please set the cluster name via env CLUSTER_NAME in agent manifest")
-	}
-
-	if agentOptions.ClusterId != "" {
-		return nil
-	}
-
-	systemNS, err := c.client.CoreV1().Namespaces().Get(context.Background(), metav1.NamespaceSystem, metav1.GetOptions{})
-	if err != nil {
-		return err
-	}
-	agentOptions.ClusterId = string(systemNS.UID)
-
-	return nil
+func (d *DefaultCloudProvider) Start(ctx context.Context) {
+	return
 }
 
 func (c *DefaultCloudProvider) GetNodeHourlyPrice(node *v1.Node) (*api.InstancePriceInfo, error) {

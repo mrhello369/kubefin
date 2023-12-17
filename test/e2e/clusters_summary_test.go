@@ -25,8 +25,8 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/kubefin/kubefin/pkg/api"
-	"github.com/kubefin/kubefin/test/e2e/utils"
+	"kubefin.dev/kubefin/pkg/api"
+	"kubefin.dev/kubefin/test/e2e/utils"
 )
 
 func TestAllClustersMetricsSummary(t *testing.T) {

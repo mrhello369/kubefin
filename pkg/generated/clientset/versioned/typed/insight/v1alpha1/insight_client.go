@@ -21,9 +21,9 @@ package v1alpha1
 import (
 	"net/http"
 
-	v1alpha1 "github.com/kubefin/kubefin/pkg/apis/insight/v1alpha1"
-	"github.com/kubefin/kubefin/pkg/generated/clientset/versioned/scheme"
 	rest "k8s.io/client-go/rest"
+	v1alpha1 "kubefin.dev/kubefin/pkg/apis/insight/v1alpha1"
+	"kubefin.dev/kubefin/pkg/generated/clientset/versioned/scheme"
 )
 
 type InsightV1alpha1Interface interface {

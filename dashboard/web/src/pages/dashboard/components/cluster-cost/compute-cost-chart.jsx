@@ -29,7 +29,7 @@ export default function ClusterComputeCostChart(props) {
   let totalOndemandSpend = 0;
   let totalSpotSpend = 0;
   let nodesData = [];
-  let dayMaxCost = 1;
+  let dayMaxCost = 0.1;
 
   // eslint-disable-next-line array-callback-return
   clusterComputeCostArrayByTimestamp.map((element) => {

@@ -23,9 +23,9 @@ import (
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
-	_ "github.com/kubefin/kubefin/api"
-	"github.com/kubefin/kubefin/pkg/server/costs_handler"
-	"github.com/kubefin/kubefin/pkg/server/resources_handler"
+	_ "kubefin.dev/kubefin/api"
+	"kubefin.dev/kubefin/pkg/server/costs_handler"
+	"kubefin.dev/kubefin/pkg/server/resources_handler"
 )
 
 func NewServerRouter() *gin.Engine {

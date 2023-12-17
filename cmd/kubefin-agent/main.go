@@ -22,7 +22,7 @@ import (
 	pkgserver "k8s.io/apiserver/pkg/server"
 	"k8s.io/component-base/cli"
 
-	"github.com/kubefin/kubefin/cmd/kubefin-agent/app"
+	"kubefin.dev/kubefin/cmd/kubefin-agent/app"
 )
 
 func main() {

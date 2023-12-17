@@ -37,13 +37,13 @@ import (
 	"k8s.io/klog/v2"
 	metricsv "k8s.io/metrics/pkg/client/clientset/versioned"
 
-	"github.com/kubefin/kubefin/cmd/kubefin-agent/app/options"
-	"github.com/kubefin/kubefin/pkg/api"
-	"github.com/kubefin/kubefin/pkg/cloudprice"
-	kubefinclient "github.com/kubefin/kubefin/pkg/generated/clientset/versioned"
-	kubefininformer "github.com/kubefin/kubefin/pkg/generated/informers/externalversions"
-	"github.com/kubefin/kubefin/pkg/metrics"
-	"github.com/kubefin/kubefin/pkg/metrics/types"
+	"kubefin.dev/kubefin/cmd/kubefin-agent/app/options"
+	"kubefin.dev/kubefin/pkg/api"
+	"kubefin.dev/kubefin/pkg/cloudprice"
+	kubefinclient "kubefin.dev/kubefin/pkg/generated/clientset/versioned"
+	kubefininformer "kubefin.dev/kubefin/pkg/generated/informers/externalversions"
+	"kubefin.dev/kubefin/pkg/metrics"
+	"kubefin.dev/kubefin/pkg/metrics/types"
 )
 
 // NewAgentCommand creates a *cobra.Command object with defaultcloud parameters
@@ -125,9 +125,7 @@ func Run(ctx context.Context, opts *options.AgentOptions) error {
 		if err != nil {
 			klog.Fatalf("Create cloud provider error:%v", err)
 		}
-		if err := provider.ParseClusterInfo(opts); err != nil {
-			klog.Fatalf("Parse cluster info error:%v", err)
-		}
+		provider.Start(runCtx)
 
 		k8sFactory := informers.NewSharedInformerFactory(client, 0)
 		kubefinFactory := kubefininformer.NewSharedInformerFactory(kubefinClient, 0)

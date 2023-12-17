@@ -21,7 +21,7 @@ import (
 
 	"github.com/spf13/pflag"
 
-	"github.com/kubefin/kubefin/pkg/values"
+	"kubefin.dev/kubefin/pkg/values"
 )
 
 type AnalyzerOptions struct {

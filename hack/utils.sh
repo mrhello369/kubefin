@@ -41,7 +41,7 @@ function init_primary_config() {
   cp -r config_template config_primary
 
   sed -i'' -e "s/{REMOTE_WRITE_ADDRESS}/http:\/\/mimir.kubefin.svc.cluster.local:9009\/api\/v1\/push/g" config_primary/core/configmap/otel.yaml
-  sed -i'' -e "s/{KUBEFIN_AGENT_IMAGE}/ko:\/\/github.com\/kubefin\/kubefin\/cmd\/kubefin-agent/g" config_primary/core/deployments/kubefin-agent.yaml
+  sed -i'' -e "s/{KUBEFIN_AGENT_IMAGE}/ko:\/\/kubefin.dev\/kubefin\/cmd\/kubefin-agent/g" config_primary/core/deployments/kubefin-agent.yaml
   sed -i'' -e "s/{CLOUD_PROVIDER}/${cloud_provider}/g" config_primary/core/deployments/kubefin-agent.yaml
   sed -i'' -e "s/{CLUSTER_ID}//g" config_primary/core/deployments/kubefin-agent.yaml
   sed -i'' -e "s/{CLUSTER_NAME}/${cluster_name}/g" config_primary/core/deployments/kubefin-agent.yaml
@@ -61,7 +61,7 @@ function init_secondary_config() {
   rm -rf config_secondary/core/deployments/kubefin-cost-analyzer.yaml
 
   sed -i'' -e "s/{REMOTE_WRITE_ADDRESS}/${metrics_push_addr}/g" config_secondary/core/configmap/otel.yaml
-  sed -i'' -e "s/{KUBEFIN_AGENT_IMAGE}/ko:\/\/github.com\/kubefin\/kubefin\/cmd\/kubefin-agent/g" config_secondary/core/deployments/kubefin-agent.yaml
+  sed -i'' -e "s/{KUBEFIN_AGENT_IMAGE}/ko:\/\/kubefin.dev\/kubefin\/cmd\/kubefin-agent/g" config_secondary/core/deployments/kubefin-agent.yaml
   sed -i'' -e "s/{CLOUD_PROVIDER}/${cloud_provider}/g" config_secondary/core/deployments/kubefin-agent.yaml
   sed -i'' -e "s/{CLUSTER_ID}//g" config_secondary/core/deployments/kubefin-agent.yaml
   sed -i'' -e "s/{CLUSTER_NAME}/${cluster_name}/g" config_secondary/core/deployments/kubefin-agent.yaml
@@ -99,7 +99,7 @@ function create_gopath_tree() {
   # $2: go path
   local go_path=$2
 
-  local kubefin_go_package="github.com/kubefin/kubefin"
+  local kubefin_go_package="kubefin.dev/kubefin"
 
   local go_pkg_dir="${go_path}/src/${kubefin_go_package}"
   go_pkg_dir=$(dirname "${go_pkg_dir}")

@@ -24,9 +24,9 @@ import (
 	cliflag "k8s.io/component-base/cli/flag"
 	"k8s.io/klog/v2"
 
-	"github.com/kubefin/kubefin/cmd/kubefin-cost-analyzer/app/options"
-	"github.com/kubefin/kubefin/pkg/query"
-	pkgrouter "github.com/kubefin/kubefin/pkg/router"
+	"kubefin.dev/kubefin/cmd/kubefin-cost-analyzer/app/options"
+	"kubefin.dev/kubefin/pkg/query"
+	pkgrouter "kubefin.dev/kubefin/pkg/router"
 )
 
 // NewAnalyzerCommand creates a *cobra.Command object with parameters

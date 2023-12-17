@@ -18,4 +18,4 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-controller-gen crd paths=./pkg/apis/insight/... output:crd:dir=./config_template/core/100-resources
+controller-gen crd paths=./pkg/apis/insight/... output:crd:dir=./config_template/crds

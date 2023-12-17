@@ -22,12 +22,12 @@ import (
 	"context"
 	"time"
 
-	v1alpha1 "github.com/kubefin/kubefin/pkg/apis/insight/v1alpha1"
-	scheme "github.com/kubefin/kubefin/pkg/generated/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	rest "k8s.io/client-go/rest"
+	v1alpha1 "kubefin.dev/kubefin/pkg/apis/insight/v1alpha1"
+	scheme "kubefin.dev/kubefin/pkg/generated/clientset/versioned/scheme"
 )
 
 // CustomAllocationConfigurationsGetter has a method to return a CustomAllocationConfigurationInterface.

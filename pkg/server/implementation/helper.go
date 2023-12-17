@@ -22,8 +22,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"k8s.io/klog/v2"
 
-	"github.com/kubefin/kubefin/pkg/api"
-	"github.com/kubefin/kubefin/pkg/utils"
+	"kubefin.dev/kubefin/pkg/api"
+	"kubefin.dev/kubefin/pkg/utils"
 )
 
 func GetStartEndStepsTimeFromCtx(ctx *gin.Context, stepSecondsIfNone int64) (int64, int64, int64, error) {
