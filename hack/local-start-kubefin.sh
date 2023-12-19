@@ -88,7 +88,7 @@ kubectl wait --for=condition=Established --all crd
 ko apply -Rf config_primary --platform="${SYS_ARCH}"
 
 echo_info "Wait mimir to be ready..."
-kubectl wait --for=condition=Ready pod -nkubefin mimir-0 --kubeconfig="${HOME}"/.kube/kubefin-server.config --timeout=600s
+kubectl wait --for=condition=Ready pod -nkubefin-system mimir-0 --kubeconfig="${HOME}"/.kube/kubefin-server.config --timeout=600s
 
 server_node_ip=$(get_mimir_server_ip "${HOME}"/.kube/kubefin-server.config)
 server_node_port=$(get_mimir_server_port "${HOME}"/.kube/kubefin-server.config)
@@ -104,8 +104,8 @@ kubectl wait --for=condition=Established --all crd
 ko apply -Rf config_secondary --platform="${SYS_ARCH}"
 
 echo_info "Wait KubeFin get ready..."
-kubectl rollout status deployment/kubefin-agent -nkubefin --kubeconfig="${HOME}"/.kube/kubefin-server.config --timeout=600s
-kubectl rollout status deployment/kubefin-cost-analyzer -nkubefin --kubeconfig="${HOME}"/.kube/kubefin-server.config --timeout=600s
+kubectl rollout status deployment/kubefin-agent -nkubefin-system --kubeconfig="${HOME}"/.kube/kubefin-server.config --timeout=600s
+kubectl rollout status deployment/kubefin-cost-analyzer -nkubefin-system --kubeconfig="${HOME}"/.kube/kubefin-server.config --timeout=600s
 
 echo_info "Run the following command to export the API and Web UI:"
-echo_note "kubectl port-forward -nkubefin svc/kubefin-cost-analyzer-service --kubeconfig=${HOME}/.kube/kubefin-server.config --address='0.0.0.0' 8080 3000"
+echo_note "kubectl port-forward -nkubefin-system svc/kubefin-cost-analyzer-service --kubeconfig=${HOME}/.kube/kubefin-server.config --address='0.0.0.0' 8080 3000"

@@ -70,7 +70,7 @@ rolebinding.rbac.authorization.k8s.io/kubefin-rb created
 configmap/otel-collector-config created
 deployment.apps/kubefin-agent created
 [INFO] Run the following command to export the API:
-kubectl port-forward -nkubefin svc/kubefin-cost-analyzer-service --kubeconfig=${HOME}/.kube/kubefin-server.config 8080 3000
+kubectl port-forward -nkubefin-system svc/kubefin-cost-analyzer-service --kubeconfig=${HOME}/.kube/kubefin-server.config 8080 3000
 ```
 
 Then, you can see things running with:
@@ -79,14 +79,14 @@ $ kind get clusters
 cluster-1
 kubefin-server
 
-$ kubectl get pods -nkubefin --kubeconfig=${HOME}/.kube/kubefin-server.config
+$ kubectl get pods -nkubefin-system --kubeconfig=${HOME}/.kube/kubefin-server.config
 NAME                                   READY   STATUS    RESTARTS   AGE
 grafana-5c9dbbcf5-jl66q                1/1     Running   0          6m54s
 kubefin-agent-57475455bb-dq7tl         2/2     Running   0          6m54s
 kubefin-cost-analyzer-5455995b-x6k78   1/1     Running   0          6m54s
 mimir-0                                1/1     Running   0          6m54s
 
-$ kubectl get pods -nkubefin --kubeconfig=${HOME}/.kube/cluster-1.config
+$ kubectl get pods -nkubefin-system --kubeconfig=${HOME}/.kube/cluster-1.config
 NAME                             READY   STATUS    RESTARTS   AGE
 kubefin-agent-557fc846db-ghxpt   2/2     Running   0          4m24s
 ```
@@ -94,7 +94,7 @@ kubefin-agent-557fc846db-ghxpt   2/2     Running   0          4m24s
 Now, let's try to query the clusters' cost summary:
 ```sh
 # In terminal 1
-$ kubectl port-forward -nkubefin service/kubefin-cost-analyzer-service 8080:8080 --address='0.0.0.0' --kubeconfig=${HOME}/.kube/kubefin-server.config
+$ kubectl port-forward -nkubefin-system service/kubefin-cost-analyzer-service 8080:8080 --address='0.0.0.0' --kubeconfig=${HOME}/.kube/kubefin-server.config
 
 # In terminal 2
 $ curl http://localhost:8080/api/v1/costs/summary | jq .
@@ -135,7 +135,7 @@ There are two clusters in the cost summary: `kubefin-server` as the primary clus
 
 After running the following command:
 ```sh
-kubectl port-forward -nkubefin service/kubefin-cost-analyzer-service 8080:8080 --address='0.0.0.0' --kubeconfig=${HOME}/.kube/kubefin-server.config
+kubectl port-forward -nkubefin-system service/kubefin-cost-analyzer-service 8080:8080 --address='0.0.0.0' --kubeconfig=${HOME}/.kube/kubefin-server.config
 ```
 
 Go to http://localhost:8080/swagger/index.html, you will see all the API of KubFin:

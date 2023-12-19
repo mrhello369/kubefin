@@ -60,7 +60,7 @@ jobs:
         export K8S_VERSION=${{ matrix.k8s-version }}
         hack/local-start-kubefin.sh
 
-        kubectl port-forward -nkubefin svc/kubefin-cost-analyzer-service --kubeconfig=${HOME}/.kube/kubefin-server.config --address='0.0.0.0' 8080 3000 &
+        kubectl port-forward -nkubefin-system svc/kubefin-cost-analyzer-service --kubeconfig=${HOME}/.kube/kubefin-server.config --address='0.0.0.0' 8080 3000 &
         sleep 300
 
     - name: E2E Test

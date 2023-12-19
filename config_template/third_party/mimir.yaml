@@ -3,7 +3,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: mimir
-  namespace: kubefin
+  namespace: kubefin-system
 spec:
   replicas: 1
   selector:
@@ -62,7 +62,7 @@ metadata:
   labels:
     app.kubernetes.io/component: mimir
   name: mimir
-  namespace: kubefin
+  namespace: kubefin-system
 spec:
   type: {MIMIR_SERVICE_TYPE}
   ports:

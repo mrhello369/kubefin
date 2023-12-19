@@ -16,7 +16,7 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: kubefin
+  name: kubefin-system
   labels:
     app.kubernetes.io/name: kubefin
     app.kubernetes.io/version: devel

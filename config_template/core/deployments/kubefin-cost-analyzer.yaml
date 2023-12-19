@@ -17,7 +17,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: kubefin-cost-analyzer
-  namespace: kubefin
+  namespace: kubefin-system
   labels:
     app.kubernetes.io/component: kubefin-cost-analyzer
     app.kubernetes.io/name: kubefin
@@ -44,7 +44,7 @@ spec:
             - --v=4
           env:
             - name: QUERY_BACKEND_ENDPOINT
-              value: "http://mimir.kubefin.svc.cluster.local:9009/prometheus"
+              value: "http://mimir.kubefin-system.svc.cluster.local:9009/prometheus"
           resources:
             requests:
               cpu: 500m
@@ -68,7 +68,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: kubefin-cost-analyzer-service
-  namespace: kubefin
+  namespace: kubefin-system
   labels:
     app: kubefin-cost-analyzer
     app.kubernetes.io/component: kubefin-cost-analyzer

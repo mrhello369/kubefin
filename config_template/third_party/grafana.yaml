@@ -5,7 +5,7 @@ metadata:
   labels:
     app: grafana
   name: grafana
-  namespace: kubefin
+  namespace: kubefin-system
 spec:
   selector:
     matchLabels:
@@ -61,7 +61,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: grafana
-  namespace: kubefin
+  namespace: kubefin-system
 spec:
   ports:
     - port: 3000
