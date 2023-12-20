@@ -59,6 +59,7 @@ const (
 	NodeCPUDeviationEnv       = "NODE_CPU_DEVIATION"
 	NodeRAMDeviationEnv       = "NODE_RAM_DEVIATION"
 	CPUMemoryCostRatioEnv     = "CPUCORE_RAMGB_PRICE_RATIO"
+	GPUCPUCostRatioEnv        = "GPUAMOUNT_CPUCORE_PRICE_RATIO"
 	CustomCPUCoreHourPriceEnv = "CUSTOM_CPU_CORE_HOUR_PRICE"
 	CustomRAMGBHourPriceEnv   = "CUSTOM_RAM_GB_HOUR_PRICE"
 

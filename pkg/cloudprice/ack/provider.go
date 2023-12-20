@@ -50,6 +50,7 @@ type ACKCloudProvider struct {
 	client kubernetes.Interface
 
 	cpuMemoryCostRatio float64
+	gpuCpuCostRatio    float64
 	region             string
 
 	// nodeSpecMap maps [node type]NodeSpec
@@ -106,10 +107,19 @@ func NewACKCloudProvider(client kubernetes.Interface, agentOptions *options.Agen
 		}
 	}
 
+	gpuCpuCostRatio := cloudpriceapis.DefaultGPUCPUCostRatio
+	if agentOptions.GPUCPUCostRatio != "" {
+		gpuCpuCostRatio, err = strconv.ParseFloat(agentOptions.GPUCPUCostRatio, 64)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	ackCloud := ACKCloudProvider{
 		client:             client,
 		region:             region,
 		cpuMemoryCostRatio: cpuMemoryCostRatio,
+		gpuCpuCostRatio:    gpuCpuCostRatio,
 		nodeSpecMap:        map[string]cloudpriceapis.NodeSpec{},
 	}
 	return &ackCloud, nil
@@ -155,18 +165,29 @@ func (a *ACKCloudProvider) GetNodeHourlyPrice(node *v1.Node) (*api.InstancePrice
 		a.nodeSpecMap[nodeType] = nodeSpec
 	}
 
-	return &api.InstancePriceInfo{
+	ret := &api.InstancePriceInfo{
 		NodeTotalHourlyPrice: nodeSpec.Price,
 		CPUCore:              nodeSpec.CPUCount,
-		CPUCoreHourlyPrice:   nodeSpec.Price * a.cpuMemoryCostRatio / (a.cpuMemoryCostRatio + 1),
 		RamGiB:               nodeSpec.RAMGBCount,
-		RAMGiBHourlyPrice:    nodeSpec.Price / (a.cpuMemoryCostRatio + 1),
+		GPUCards:             nodeSpec.GPUAmount,
 		InstanceType:         nodeType,
 		BillingMode:          values.BillingModeOnDemand,
 		BillingPeriod:        0,
 		Region:               a.region,
 		CloudProvider:        api.CloudProviderACK,
-	}, nil
+	}
+
+	if ret.GPUCards == 0 {
+		ret.CPUCoreHourlyPrice = nodeSpec.Price * a.cpuMemoryCostRatio / (a.cpuMemoryCostRatio + 1)
+		ret.RAMGiBHourlyPrice = nodeSpec.Price / (a.cpuMemoryCostRatio + 1)
+		ret.GPUCardHourlyPrice = 0
+	} else {
+		ret.CPUCoreHourlyPrice = nodeSpec.Price * a.cpuMemoryCostRatio / (1 + a.cpuMemoryCostRatio + a.cpuMemoryCostRatio*a.gpuCpuCostRatio)
+		ret.RAMGiBHourlyPrice = nodeSpec.Price / (1 + a.cpuMemoryCostRatio + a.cpuMemoryCostRatio*a.gpuCpuCostRatio)
+		ret.GPUCardHourlyPrice = nodeSpec.Price * a.cpuMemoryCostRatio * a.gpuCpuCostRatio / (1 + a.cpuMemoryCostRatio + a.cpuMemoryCostRatio*a.gpuCpuCostRatio)
+	}
+
+	return ret, nil
 }
 
 func queryNodePriceFromCloud(nodeRegion, nodeType string) (float64, error) {
@@ -232,15 +253,22 @@ func queryNodeSpecFromCloud() (map[string]cloudpriceapis.NodeSpec, error) {
 			cpuCount, err := strconv.ParseFloat(instance.CPUCoreCount, 64)
 			if err != nil {
 				klog.Errorf("Can not parse cpu count(%s):%v", instance.CPUCoreCount, err)
+				return nil, err
 			}
 			memoryCount, err := strconv.ParseFloat(instance.MemorySize, 64)
 			if err != nil {
 				klog.Errorf("Can not parse memory count(%s):%v", instance.MemorySize, err)
 				return nil, err
 			}
+			gpuAmount, err := strconv.ParseFloat(instance.GPUAmount, 64)
+			if err != nil {
+				klog.Errorf("Can not parse gpu amount(%s):%v", instance.GPUAmount, err)
+				return nil, err
+			}
 			ret[nodeType] = cloudpriceapis.NodeSpec{
 				CPUCount:   cpuCount,
 				RAMGBCount: memoryCount,
+				GPUAmount:  gpuAmount,
 			}
 		}
 	}

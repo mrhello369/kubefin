@@ -20,6 +20,7 @@ type NodeSpecInfo struct {
 	InstanceTypeId string `json:"instanceTypeId"`
 	CPUCoreCount   string `json:"cpuCoreCount"`
 	MemorySize     string `json:"memorySize"`
+	GPUAmount      string `json:"gpuAmount"`
 }
 
 type NodeSpecQueryResultInstanceType struct {
