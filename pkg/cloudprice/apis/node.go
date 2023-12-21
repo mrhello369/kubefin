@@ -18,10 +18,12 @@ package apis
 
 const (
 	DefaultCPUMemoryCostRatio = 3.0
+	DefaultGPUCPUCostRatio    = 16.0
 )
 
 type NodeSpec struct {
 	CPUCount   float64
 	RAMGBCount float64
+	GPUAmount  float64
 	Price      float64
 }
