@@ -108,6 +108,7 @@ export default function ClusterMemoryUtilization(props) {
                 day: "numeric",
                 hour: "numeric",
                 minute: "numeric",
+                second: "numeric",
                 hour12: !1,
               })
               .split(",")
@@ -123,7 +124,7 @@ export default function ClusterMemoryUtilization(props) {
         loadingText="Loading chart"
         recoveryText="Retry"
         xScaleType="time"
-        xTitle="Time (UTC)"
+        xTitle={"Time(" + Intl.DateTimeFormat().resolvedOptions().timeZone + ")"}
         yTitle="Memory (GiB)"
         empty={
           <Box textAlign="center" color="inherit">

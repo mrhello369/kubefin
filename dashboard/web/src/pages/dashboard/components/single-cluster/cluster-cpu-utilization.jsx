@@ -102,12 +102,12 @@ export default function ClusterCPUUtilization(props) {
           chartAriaRoleDescription: "line chart",
           detailTotalLabel: "Total",
           xTickFormatter: (e) =>
-            e
-              .toLocaleDateString("en-US", {
+            e.toLocaleDateString("en-US", {
                 month: "short",
                 day: "numeric",
                 hour: "numeric",
                 minute: "numeric",
+                second: "numeric",
                 hour12: !1,
               })
               .split(",")
@@ -123,7 +123,7 @@ export default function ClusterCPUUtilization(props) {
         loadingText="Loading chart"
         recoveryText="Retry"
         xScaleType="time"
-        xTitle="Time (UTC)"
+        xTitle={"Time(" + Intl.DateTimeFormat().resolvedOptions().timeZone + ")"}
         yTitle="CPU Cores (vCPU)"
         empty={
           <Box textAlign="center" color="inherit">
