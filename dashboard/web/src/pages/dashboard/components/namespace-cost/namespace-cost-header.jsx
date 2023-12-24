@@ -51,6 +51,7 @@ export function NamespaceCostHeader(props) {
             podCountIndex += 1.0;
             cpuRequestIndex += 1.0;
             ramGiBRequestIndex += 1.0;
+            return null;
           });
 
           nsCostInfo.namespace = namespace

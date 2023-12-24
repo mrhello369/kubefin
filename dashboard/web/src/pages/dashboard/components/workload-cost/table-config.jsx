@@ -20,19 +20,19 @@ export const COLUMN_DEFINITIONS_WORKLOAD = [
   },
   {
     id: "pods",
-    header: "Pods",
+    header: "Avg Pods",
     cell: (item) => keepTwoDecimal(item.podCount),
     sortingField: "pods",
   },
   {
     id: "cpu",
-    header: "CPU requested",
+    header: "Avg CPU requested",
     cell: (item) => keepThreeDecimal(item.cpuCoreRequest),
     sortingField: "cpu",
   },
   {
     id: "memory",
-    header: "Memory requested",
+    header: "Avg Memory requested",
     cell: (item) => keepThreeDecimal(item.ramGiBRequest),
     sortingField: "memory",
   },
