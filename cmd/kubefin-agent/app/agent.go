@@ -38,12 +38,11 @@ import (
 	metricsv "k8s.io/metrics/pkg/client/clientset/versioned"
 
 	"kubefin.dev/kubefin/cmd/kubefin-agent/app/options"
-	"kubefin.dev/kubefin/pkg/api"
-	"kubefin.dev/kubefin/pkg/cloudprice"
+	"kubefin.dev/kubefin/pkg/agent/cloudprice"
+	"kubefin.dev/kubefin/pkg/agent/metrics"
+	"kubefin.dev/kubefin/pkg/agent/metrics/types"
 	kubefinclient "kubefin.dev/kubefin/pkg/generated/clientset/versioned"
 	kubefininformer "kubefin.dev/kubefin/pkg/generated/informers/externalversions"
-	"kubefin.dev/kubefin/pkg/metrics"
-	"kubefin.dev/kubefin/pkg/metrics/types"
 )
 
 // NewAgentCommand creates a *cobra.Command object with defaultcloud parameters
@@ -202,11 +201,11 @@ func runLeaderElection(ctx context.Context, clientset kubernetes.Interface,
 }
 
 func getAllCoreResourceLister(k8sFactory informers.SharedInformerFactory,
-	kubfinFactory kubefininformer.SharedInformerFactory) *api.CoreResourceInformerLister {
+	kubfinFactory kubefininformer.SharedInformerFactory) *options.CoreResourceInformerLister {
 	coreResource := k8sFactory.Core().V1()
 	appsResource := k8sFactory.Apps().V1()
 	kubefinResource := kubfinFactory.Insight().V1alpha1()
-	return &api.CoreResourceInformerLister{
+	return &options.CoreResourceInformerLister{
 		NodeInformer:              coreResource.Nodes().Informer(),
 		NamespaceInformer:         coreResource.Namespaces().Informer(),
 		PodInformer:               coreResource.Pods().Informer(),

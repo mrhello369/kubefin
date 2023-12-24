@@ -17,10 +17,10 @@ limitations under the License.
 package utils
 
 import (
-	"kubefin.dev/kubefin/pkg/api"
+	"kubefin.dev/kubefin/pkg/analyzer/types"
 )
 
-func ValidateAllClustersMetricsSummary(clustersSummary *api.ClusterResourcesSummaryList) bool {
+func ValidateAllClustersMetricsSummary(clustersSummary *types.ClusterResourcesSummaryList) bool {
 	for _, cluster := range clustersSummary.Items {
 		if cluster.ClusterConnectionSate != "running" ||
 			cluster.NodeNumbersCurrent == 0 ||
@@ -35,7 +35,7 @@ func ValidateAllClustersMetricsSummary(clustersSummary *api.ClusterResourcesSumm
 	return true
 }
 
-func ValidateSpecificClusterMetricsSummary(clusterSummary *api.ClusterResourcesSummary) bool {
+func ValidateSpecificClusterMetricsSummary(clusterSummary *types.ClusterResourcesSummary) bool {
 	if clusterSummary.ClusterConnectionSate != "running" ||
 		clusterSummary.NodeNumbersCurrent == 0 ||
 		clusterSummary.PodTotalCurrent == 0 ||
@@ -48,7 +48,7 @@ func ValidateSpecificClusterMetricsSummary(clusterSummary *api.ClusterResourcesS
 	return true
 }
 
-func ValidateAllClustersCostsSummary(clustersSummary *api.ClusterCostsSummaryList) bool {
+func ValidateAllClustersCostsSummary(clustersSummary *types.ClusterCostsSummaryList) bool {
 	for _, cluster := range clustersSummary.Items {
 		if cluster.ClusterConnectionSate != "running" ||
 			cluster.ClusterMonthCostCurrent == 0 ||
@@ -62,7 +62,7 @@ func ValidateAllClustersCostsSummary(clustersSummary *api.ClusterCostsSummaryLis
 	return true
 }
 
-func ValidateSpecificClusterCostsSummary(clusterSummary *api.ClusterCostsSummary) bool {
+func ValidateSpecificClusterCostsSummary(clusterSummary *types.ClusterCostsSummary) bool {
 	if clusterSummary.ClusterConnectionSate != "running" ||
 		clusterSummary.ClusterMonthCostCurrent == 0 ||
 		clusterSummary.ClusterMonthEstimateCost == 0 ||

@@ -25,7 +25,7 @@ import (
 	"net/http"
 	"testing"
 
-	"kubefin.dev/kubefin/pkg/api"
+	"kubefin.dev/kubefin/pkg/analyzer/types"
 	"kubefin.dev/kubefin/test/e2e/utils"
 )
 
@@ -36,7 +36,7 @@ func TestAllClustersMetricsSummary(t *testing.T) {
 	if err != nil || code != http.StatusOK {
 		t.Fatalf("Get all clusters metrics summary error:%v, %d", err, code)
 	}
-	allClustersSummary := api.ClusterResourcesSummaryList{}
+	allClustersSummary := types.ClusterResourcesSummaryList{}
 	err = json.Unmarshal(body, &allClustersSummary)
 	if err != nil {
 		t.Fatalf("Marshal clusters metrics summary error:%v", err)
@@ -55,7 +55,7 @@ func TestSpecificClusterMetricsSummary(t *testing.T) {
 		if err != nil || code != http.StatusOK {
 			t.Fatalf("Get specific cluster metrics summary error:%v, %d", err, code)
 		}
-		clusterSummary := api.ClusterResourcesSummary{}
+		clusterSummary := types.ClusterResourcesSummary{}
 		err = json.Unmarshal(body, &clusterSummary)
 		if err != nil {
 			t.Fatalf("Marshal cluster metrics summary error:%v", err)
@@ -84,7 +84,7 @@ func TestAllClustersCostsSummary(t *testing.T) {
 	if err != nil || code != http.StatusOK {
 		t.Fatalf("Get all clusters costs summary error:%v, %d", err, code)
 	}
-	allClustersSummary := api.ClusterCostsSummaryList{}
+	allClustersSummary := types.ClusterCostsSummaryList{}
 	err = json.Unmarshal(body, &allClustersSummary)
 	if err != nil {
 		t.Fatalf("Marshal clusters costs summary error:%v", err)
@@ -103,7 +103,7 @@ func TestSpecificClusterCostsSummary(t *testing.T) {
 		if err != nil || code != http.StatusOK {
 			t.Fatalf("Get specific cluster costs summary error:%v, %d", err, code)
 		}
-		clusterSummary := api.ClusterCostsSummary{}
+		clusterSummary := types.ClusterCostsSummary{}
 		err = json.Unmarshal(body, &clusterSummary)
 		if err != nil {
 			t.Fatalf("Marshal cluster costs summary error:%v", err)

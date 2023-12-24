@@ -25,8 +25,8 @@ import (
 	"k8s.io/klog/v2"
 
 	"kubefin.dev/kubefin/cmd/kubefin-cost-analyzer/app/options"
-	"kubefin.dev/kubefin/pkg/query"
-	pkgrouter "kubefin.dev/kubefin/pkg/router"
+	"kubefin.dev/kubefin/pkg/analyzer/query"
+	pkgrouter "kubefin.dev/kubefin/pkg/analyzer/router"
 )
 
 // NewAnalyzerCommand creates a *cobra.Command object with parameters
