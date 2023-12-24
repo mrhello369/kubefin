@@ -22,9 +22,13 @@ import (
 
 	"github.com/spf13/pflag"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	appv1 "k8s.io/client-go/listers/apps/v1"
+	v1 "k8s.io/client-go/listers/core/v1"
+	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
 	baseconfig "k8s.io/component-base/config"
 
+	insightlister "kubefin.dev/kubefin/pkg/generated/listers/insight/v1alpha1"
 	"kubefin.dev/kubefin/pkg/values"
 )
 
@@ -46,6 +50,22 @@ type AgentOptions struct {
 	CustomGPUCardHourPrice   string
 	CustomGPUDeviceLabelKey  string
 	CustomGPUDevicePriceList string
+}
+
+type CoreResourceInformerLister struct {
+	NodeInformer              cache.SharedIndexInformer
+	NamespaceInformer         cache.SharedIndexInformer
+	PodInformer               cache.SharedIndexInformer
+	DeploymentInformer        cache.SharedIndexInformer
+	StatefulSetInformer       cache.SharedIndexInformer
+	DaemonSetInformer         cache.SharedIndexInformer
+	CustomWorkloadCfgInformer cache.SharedIndexInformer
+	NodeLister                v1.NodeLister
+	PodLister                 v1.PodLister
+	DeploymentLister          appv1.DeploymentLister
+	StatefulSetLister         appv1.StatefulSetLister
+	DaemonSetLister           appv1.DaemonSetLister
+	CustomWorkloadCfgLister   insightlister.CustomAllocationConfigurationLister
 }
 
 // NewAgentOptions builds an empty options.

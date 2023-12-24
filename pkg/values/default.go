@@ -42,15 +42,6 @@ const (
 	HourInSeconds          = 3600.0
 	MetricsPeriodInSeconds = 15.0
 
-	BillingModeOnDemand = "ondemand"
-	BillingModeMonthly  = "monthly"
-	BillingModeYearly   = "yearly"
-	BillingModeSpot     = "spot"
-	BillingModeFallback = "fallback"
-
-	ClusterStateRunning        = "running"
-	ClusterStateLostConnection = "connect_failed"
-
 	CloudProviderEnv          = "CLOUD_PROVIDER"
 	ClusterNameEnv            = "CLUSTER_NAME"
 	ClusterIdEnv              = "CLUSTER_ID"
@@ -89,8 +80,11 @@ const (
 	DefaultStepSeconds = 3600
 	// DefaultDetailStepSeconds is used to show the fine-grained line chart of cpu/memory data
 	DefaultDetailStepSeconds = 600
-)
 
-const (
+	CloudProviderACK       = "ack"
+	CloudProviderEKS       = "eks"
+	CloudProviderOnPremise = "onpremise"
+	CloudProviderAuto      = "auto"
+
 	ResourceGPU = v1.ResourceName("nvidia.com/gpu")
 )

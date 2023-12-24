@@ -64,4 +64,10 @@ var (
 	CloudProviderLabelKey     = "cloud_provider"
 	PodNameLabelKey           = "pod"
 	PodScheduledKey           = "scheduled"
+
+	BillingModeOnDemand = "ondemand"
+	BillingModeMonthly  = "monthly"
+	BillingModeYearly   = "yearly"
+	BillingModeSpot     = "spot"
+	BillingModeFallback = "fallback"
 )
