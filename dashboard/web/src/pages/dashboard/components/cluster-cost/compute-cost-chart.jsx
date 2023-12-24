@@ -106,7 +106,7 @@ export default function ClusterComputeCostChart(props) {
           xScaleType="categorical"
           stackedBars={true}
           series={nodesSeries}
-          xTitle="Date"
+          xTitle={"Time(" + Intl.DateTimeFormat().resolvedOptions().timeZone + ")"}
           yTitle="Spend"
           ariaDescription={`Bar chart showing total instance hours per instance type over the last 15 days. ${barChartInstructions}`}
           i18nStrings={{
