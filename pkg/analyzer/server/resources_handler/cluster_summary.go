@@ -38,7 +38,7 @@ import (
 //	@Failure		500	{object}	types.StatusError
 //	@Router			/resources/summary [get]
 func ClustersResourcesSummaryHandler(ctx *gin.Context) {
-	klog.Infof("Start to query clusters metrics summary")
+	klog.V(4).Infof("Start to query clusters metrics summary")
 	tenantId := utils.ParserTenantIdFromCtx(ctx)
 	// If data not comes up in two-month period, we will ignore it
 	start, end := utils.GetCurrentTwoMonthStartEndTime()
@@ -75,7 +75,7 @@ func ClustersResourcesSummaryHandler(ctx *gin.Context) {
 //	@Failure		500			{object}	types.StatusError
 //	@Router			/resources/clusters/{cluster_id}/summary [get]
 func ClusterResourcesSummaryHandler(ctx *gin.Context) {
-	klog.Infof("Start to query specific cluster metrics summary")
+	klog.V(4).Infof("Start to query specific cluster metrics summary")
 	clusterId := utils.ParseClusterFromCtx(ctx)
 	tenantId := utils.ParserTenantIdFromCtx(ctx)
 	// If data not comes up in two-month period, we will ignore it
