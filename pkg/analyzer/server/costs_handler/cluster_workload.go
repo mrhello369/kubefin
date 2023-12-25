@@ -44,7 +44,7 @@ import (
 //	@Failure		500			{object}	types.StatusError
 //	@Router			/costs/clusters/{cluster_id}/workload [get]
 func ClusterWorkloadsCostsHandler(ctx *gin.Context) {
-	klog.V(6).Info("Start to query clusters workload cost")
+	klog.V(4).Info("Start to query clusters workload cost")
 	tenantId := utils.ParserTenantIdFromCtx(ctx)
 	clusterId := utils.ParseClusterFromCtx(ctx)
 	if clusterId == "" {

@@ -38,7 +38,7 @@ import (
 //	@Failure		500	{object}	types.StatusError
 //	@Router			/costs/summary   [get]
 func ClustersCostsSummaryHandler(ctx *gin.Context) {
-	klog.V(6).Info("Start to query clusters costs summary")
+	klog.V(4).Info("Start to query clusters costs summary")
 	tenantId := utils.ParserTenantIdFromCtx(ctx)
 	// If data not comes up in two-month period, we will ignore it
 	start, end := utils.GetCurrentTwoMonthStartEndTime()

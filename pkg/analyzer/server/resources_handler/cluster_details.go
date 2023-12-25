@@ -44,7 +44,7 @@ import (
 //	@Failure		500			{object}	types.StatusError
 //	@Router			/resources/clusters/{cluster_id}/cpu [get]
 func ClusterCPUResourcesHandler(ctx *gin.Context) {
-	klog.Info("Start to query cluster CPU resources metrics")
+	klog.V(4).Info("Start to query cluster CPU resources metrics")
 	clusterResourcesHandler(ctx, v1.ResourceCPU)
 }
 
@@ -62,7 +62,7 @@ func ClusterCPUResourcesHandler(ctx *gin.Context) {
 //	@Failure		500			{object}	types.StatusError
 //	@Router			/resources/clusters/{cluster_id}/memory [get]
 func ClusterMemoryResourcesHandler(ctx *gin.Context) {
-	klog.Info("Start to query cluster Memory resources metrics")
+	klog.V(4).Info("Start to query cluster Memory resources metrics")
 	clusterResourcesHandler(ctx, v1.ResourceMemory)
 }
 
