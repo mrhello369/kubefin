@@ -17,7 +17,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: kubefin-role
-  namespace: kubefin
+  namespace: kubefin-system
 rules:
   # For kubefin component high availability, it needs leases resource operation privilege.
   - apiGroups: ["coordination.k8s.io"]

@@ -3,7 +3,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: mimir-config
-  namespace: kubefin
+  namespace: kubefin-system
 data:
   config.yaml: |-
     multitenancy_enabled: false

@@ -29,7 +29,7 @@ function get_mimir_server_ip() {
 
 function get_mimir_server_port() {
   kubeconfig=$1
-  server_node_port=$(kubectl get svc -nkubefin mimir --kubeconfig="${kubeconfig}" -ojson | jq .spec.ports[0].nodePort)
+  server_node_port=$(kubectl get svc -nkubefin-system mimir --kubeconfig="${kubeconfig}" -ojson | jq .spec.ports[0].nodePort)
   echo "${server_node_port}"
 }
 
@@ -47,7 +47,7 @@ function init_primary_config() {
   rm -rf config_primary
   cp -r config_template config_primary
 
-  sed -i'' -e "s/{REMOTE_WRITE_ADDRESS}/http:\/\/mimir.kubefin.svc.cluster.local:9009\/api\/v1\/push/g" config_primary/core/configmap/otel.yaml
+  sed -i'' -e "s/{REMOTE_WRITE_ADDRESS}/http:\/\/mimir.kubefin-system.svc.cluster.local:9009\/api\/v1\/push/g" config_primary/core/configmap/otel.yaml
   sed -i'' -e "s/{KUBEFIN_AGENT_IMAGE}/ko:\/\/kubefin.dev\/kubefin\/cmd\/kubefin-agent/g" config_primary/core/deployments/kubefin-agent.yaml
   sed -i'' -e "s/{CLOUD_PROVIDER}/${cloud_provider}/g" config_primary/core/deployments/kubefin-agent.yaml
   sed -i'' -e "s/{CLUSTER_ID}//g" config_primary/core/deployments/kubefin-agent.yaml

@@ -3,7 +3,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: grafana-datasources
-  namespace: kubefin
+  namespace: kubefin-system
 data:
   datasources.yaml: |-
     {

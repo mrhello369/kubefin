@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	KubeFinNamespace = "kubefin"
+	KubeFinNamespace = "kubefin-system"
 	KubeFinAgentName = "kubefin-agent"
 
 	// DefaultLeaseDuration is the LeaseDuration for leader election.

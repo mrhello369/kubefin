@@ -17,7 +17,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: otel-collector-config
-  namespace: kubefin
+  namespace: kubefin-system
 data:
   config.yaml: |-
     receivers:
