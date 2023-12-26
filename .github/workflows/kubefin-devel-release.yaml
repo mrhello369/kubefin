@@ -48,7 +48,7 @@ jobs:
           ./hack/release-yamls.sh "$GITHUB_WORKSPACE" $YAML_OUTPUT_DIR/
 
       - name: Setup AWS CLI
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -56,7 +56,9 @@ jobs:
 
       - name: Sync files to S3 bucket
         run: |
-           aws s3 cp ${{ github.workspace }}/artifacts/build s3://${{ secrets.AWS_BUCKET }}/ --acl public-read --recursive
+          aws s3 cp ${{ github.workspace }}/artifacts/build/kubefin-crd.yaml s3://${{ secrets.AWS_BUCKET }}/ --acl public-read --recursive
+          aws s3 cp ${{ github.workspace }}/artifacts/build/kubefin-primary.yaml s3://${{ secrets.AWS_BUCKET }}/ --acl public-read --recursive
+          aws s3 cp ${{ github.workspace }}/artifacts/build/kubefin-secondary.yaml s3://${{ secrets.AWS_BUCKET }}/ --acl public-read --recursive
 
   dashboard-release:
     name: Build KubeFin Devel Dashboard
