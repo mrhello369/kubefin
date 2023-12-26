@@ -47,11 +47,16 @@ jobs:
           ko login docker.io --username ${DOCKER_HUB_USERNAME} --password ${DOCKER_HUB_TOKEN}
           ./hack/release-yamls.sh "$GITHUB_WORKSPACE" $YAML_OUTPUT_DIR/
 
-      - name: Archive release yaml
-        uses: actions/upload-artifact@v3
+      - name: Upload to Amazon S3
+        use: Noelware/s3-action@2 # this can be `master` or a tagged release
         with:
-          name: devel-release
-          path: ${{ github.workspace }}/artifacts/build/*.yaml
+            access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            secret-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            region: us-east-2
+            bucket: ${{ secrets.AWS_BUCKET }}
+            files: |
+                ${{ github.workspace }}/artifacts/build/kubefin-crd.yaml
+                ${{ github.workspace }}/artifacts/build/kubefin-primary.yaml
 
   dashboard-release:
     name: Build KubeFin Devel Dashboard
