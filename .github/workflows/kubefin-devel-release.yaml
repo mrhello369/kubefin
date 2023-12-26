@@ -48,7 +48,7 @@ jobs:
           ./hack/release-yamls.sh "$GITHUB_WORKSPACE" $YAML_OUTPUT_DIR/
 
       - name: Upload to Amazon S3
-        use: Noelware/s3-action@2 # this can be `master` or a tagged release
+        uses: Noelware/s3-action@2 # this can be `master` or a tagged release
         with:
             access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
             secret-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
