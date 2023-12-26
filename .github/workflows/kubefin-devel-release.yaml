@@ -56,9 +56,9 @@ jobs:
 
       - name: Sync files to S3 bucket
         run: |
-          aws s3 cp ${{ github.workspace }}/artifacts/build/kubefin-crd.yaml s3://${{ secrets.AWS_BUCKET }}/ --acl public-read --recursive
-          aws s3 cp ${{ github.workspace }}/artifacts/build/kubefin-primary.yaml s3://${{ secrets.AWS_BUCKET }}/ --acl public-read --recursive
-          aws s3 cp ${{ github.workspace }}/artifacts/build/kubefin-secondary.yaml s3://${{ secrets.AWS_BUCKET }}/ --acl public-read --recursive
+          aws s3 cp ${{ github.workspace }}/artifacts/build/kubefin-crd.yaml s3://${{ secrets.AWS_BUCKET }}/ --acl public-read
+          aws s3 cp ${{ github.workspace }}/artifacts/build/kubefin-primary.yaml s3://${{ secrets.AWS_BUCKET }}/ --acl public-read
+          aws s3 cp ${{ github.workspace }}/artifacts/build/kubefin-secondary.yaml s3://${{ secrets.AWS_BUCKET }}/ --acl public-read
 
   dashboard-release:
     name: Build KubeFin Devel Dashboard
