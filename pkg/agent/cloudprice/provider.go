@@ -64,6 +64,7 @@ func initCloudProviderAuto(client kubernetes.Interface, agentOptions *options.Ag
 
 	cloudProviderID := strings.ToLower(nodes.Items[0].Spec.ProviderID)
 	if strings.HasPrefix(cloudProviderID, "aws") {
+		agentOptions.CloudProvider = values.CloudProviderEKS
 		return eks.NewEKSCloudProvider(client, agentOptions)
 	}
 	if strings.HasPrefix(cloudProviderID, "gce") {
