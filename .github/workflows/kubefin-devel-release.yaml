@@ -47,14 +47,16 @@ jobs:
           ko login docker.io --username ${DOCKER_HUB_USERNAME} --password ${DOCKER_HUB_TOKEN}
           ./hack/release-yamls.sh "$GITHUB_WORKSPACE" $YAML_OUTPUT_DIR/
 
-      - uses: shallwefootball/s3-upload-action@master
-        name: Upload S3
-        id: S3
+      - name: Setup AWS CLI
+        uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
-          aws_bucket: ${{ secrets.AWS_BUCKET }}
-          source_dir: ${{ github.workspace }}/artifacts/build
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-2
+
+      - name: Sync files to S3 bucket
+        run: |
+           aws s3 cp ${{ github.workspace }}/artifacts/build s3://${{ secrets.AWS_BUCKET }}/ --acl public-read --recursive
 
   dashboard-release:
     name: Build KubeFin Devel Dashboard
