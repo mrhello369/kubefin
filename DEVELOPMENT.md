@@ -94,7 +94,7 @@ kubefin-agent-557fc846db-ghxpt   2/2     Running   0          4m24s
 Now, let's try to query the clusters' cost summary:
 ```sh
 # In terminal 1
-$ kubectl port-forward -nkubefin-system service/kubefin-cost-analyzer-service 8080:8080 --address='0.0.0.0' --kubeconfig=${HOME}/.kube/kubefin-server.config
+$ kubectl port-forward -nkubefin-system svc/kubefin-cost-analyzer-service --kubeconfig=${HOME}/.kube/kubefin-server.config 8080 3000
 
 # In terminal 2
 $ curl http://localhost:8080/api/v1/costs/summary | jq .
@@ -131,6 +131,8 @@ $ curl http://localhost:8080/api/v1/costs/summary | jq .
 ```
 There are two clusters in the cost summary: `kubefin-server` as the primary cluster and `cluster-1` as the secondary cluster.
 
+You can also access the KubeFin dashboard at http://localhost:3000.
+
 ### Checking KubeFin API
 
 After running the following command:
@@ -145,19 +147,13 @@ Go to http://localhost:8080/swagger/index.html, you will see all the API of KubF
 
 ### Iterating
 
-Once you make changes to the code-base, you can redeploy `KubeFin`:
-```sh
-export KO_DOCKER_REPO=kind.local
-# Redeploy in primary cluster(kubefin-agent/kubefin-cost-analyzer)
-export KUBECONFIG=${HOME}/.kube/kubefin-server.config
-export KIND_CLUSTER_NAME=kubefin-server
-ko apply -Rf config_primary
+Once you make changes to the code-base, you can redeploy the updated `KubeFin` with:
 
-# Redeploy in secondary cluster(kubefin-agent)
-export KUBECONFIG=${HOME}/.kube/cluster-1.config
-export KIND_CLUSTER_NAME=cluster-1
-ko apply -Rf config_secondary
+```sh
+hack/local-start-kubefin.sh
 ```
+
+It will autpomatically build the `KubeFin` image again and deploy it to the cluster.
 
 If you make any changes related to the API, please run the following command before sumbmitting the PR:
 ```
