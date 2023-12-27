@@ -12,6 +12,7 @@ import {
   ExternalLinkItem,
   InfoLink,
 } from "../../../commons/common-components";
+import { keepThreeDecimal } from "../components-common";
 
 function TotalComputeCostInfo() {
   return (
@@ -63,7 +64,7 @@ export default function ClustersCostOverview(props) {
       }
     >
       <Box textAlign="right" margin={{ top: "xl" }}>
-        <CounterLink>${props.totalCost.toFixed(2)}</CounterLink>
+        <CounterLink>${keepThreeDecimal(props.totalCost)}</CounterLink>
         <Box color="text-body-secondary">Month</Box>
       </Box>
     </Container>

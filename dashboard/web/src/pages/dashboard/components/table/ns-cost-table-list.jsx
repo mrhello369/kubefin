@@ -8,6 +8,7 @@ import {
 import { NSCostListItem } from "./ns-cost-list-item";
 import "../../../../styles/base.scss";
 import { NSPropertyFilterTable } from "./ns-property-filter-table";
+import { keepThreeDecimal, keepTwoDecimal } from "../components-common";
 
 export default function NSCostTableList(props) {
   const [columnDefinitions, saveWidths] = useColumnWidths(
@@ -24,10 +25,10 @@ export default function NSCostTableList(props) {
     ([key, value]) => {
       return new NSCostListItem(
         key,
-        value.podCount.toFixed(2),
-        value.cpuRequest.toFixed(2),
-        value.ramGiBRequest.toFixed(2),
-        value.totalCost.toFixed(2)
+        keepTwoDecimal(value.podCount),
+        keepTwoDecimal(value.cpuRequest),
+        keepTwoDecimal(value.ramGiBRequest),
+        keepThreeDecimal(value.totalCost)
       );
     }
   );

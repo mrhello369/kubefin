@@ -3,7 +3,7 @@
 import React from "react";
 import { StatusIndicator, Link } from "@cloudscape-design/components";
 import { addColumnSortLabels } from "../../../../common/labels";
-import { keepTwoDecimal } from "../components-common";
+import { keepThreeDecimal, keepTwoDecimal } from "../components-common";
 
 export const CLUSTERS_COLUMN_DEFINITIONS = addColumnSortLabels([
   {
@@ -56,7 +56,7 @@ export const CLUSTERS_COLUMN_DEFINITIONS = addColumnSortLabels([
     id: "computeCost",
     sortingField: "computeCost",
     header: "total cost",
-    cell: (item) => keepTwoDecimal(item.computeCost),
+    cell: (item) => keepThreeDecimal(item.computeCost),
     minWidth: 100,
   },
   {
@@ -107,7 +107,7 @@ export const CLUSTER_COMPUTE_COST_COLUMN_DEFINITIONS = addColumnSortLabels([
     sortingField: "costCPU",
     header: "CPU cost",
     cell: (item) =>
-      keepTwoDecimal(item.cpuCost),
+    keepThreeDecimal(item.cpuCost),
     minWidth: 100,
   },
   {
@@ -115,7 +115,7 @@ export const CLUSTER_COMPUTE_COST_COLUMN_DEFINITIONS = addColumnSortLabels([
     sortingField: "costMEM",
     header: "Memory cost",
     cell: (item) =>
-      keepTwoDecimal(item.ramCost),
+      keepThreeDecimal(item.ramCost),
     minWidth: 100,
   },
   {

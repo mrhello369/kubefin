@@ -5,7 +5,7 @@ import { CLUSTER_COMPUTE_COST_COLUMN_DEFINITIONS } from "./table-property-filter
 import { CommonTable } from "./common-table";
 import { ClusterComputeCostListItem } from "./cluster-compute-cost-list-item";
 import { ClusterCostInfo } from "../model/cluster-cost";
-import { keepTwoDecimal } from "../components-common";
+import { keepThreeDecimal, keepTwoDecimal } from "../components-common";
 
 import "../../../../styles/base.scss";
 
@@ -29,18 +29,18 @@ export default function ClusterComputeCostList(props) {
   const data = costArray.map((item) => {
     const clusterComputeCostListItem = new ClusterComputeCostListItem(
       item[0],
-      keepTwoDecimal(item[1].totalCost),
-      keepTwoDecimal(item[1].costFallbackBillingMode),
-      keepTwoDecimal(item[1].costOnDemandBillingMode),
-      keepTwoDecimal(item[1].costSpotBillingMode),
+      keepThreeDecimal(item[1].totalCost),
+      keepThreeDecimal(item[1].costFallbackBillingMode),
+      keepThreeDecimal(item[1].costOnDemandBillingMode),
+      keepThreeDecimal(item[1].costSpotBillingMode),
       keepTwoDecimal(item[1].cpuCoreCount),
       item[1].cpuCoreCountIndex,
       keepTwoDecimal(item[1].cpuCoreUsage),
-      keepTwoDecimal(item[1].cpuCost),
+      keepThreeDecimal(item[1].cpuCost),
       keepTwoDecimal(item[1].ramGiBCount),
       item[1].ramGiBCountIndex,
       keepTwoDecimal(item[1].ramGiBUsage),
-      keepTwoDecimal(item[1].ramCost),
+      keepThreeDecimal(item[1].ramCost),
     );
     return clusterComputeCostListItem;
   });
@@ -52,18 +52,18 @@ export default function ClusterComputeCostList(props) {
       // Calculate the cost sum for each item
       const clusterComputeCostListItem = new ClusterComputeCostListItem(
         item.timestamp,
-        keepTwoDecimal(item.totalCost),
-        keepTwoDecimal(item.costFallbackBillingMode),
-        keepTwoDecimal(item.costOnDemandBillingMode),
-        keepTwoDecimal(item.costSpotBillingMode),
+        keepThreeDecimal(item.totalCost),
+        keepThreeDecimal(item.costFallbackBillingMode),
+        keepThreeDecimal(item.costOnDemandBillingMode),
+        keepThreeDecimal(item.costSpotBillingMode),
         keepTwoDecimal(item.cpuCoreCount),
         1.0,
         keepTwoDecimal(item.cpuCoreUsage),
-        keepTwoDecimal(item.cpuCost),
+        keepThreeDecimal(item.cpuCost),
         keepTwoDecimal(item.ramGiBCount),
         1.0,
         keepTwoDecimal(item.ramUsage),
-        keepTwoDecimal(item.ramCost),
+        keepThreeDecimal(item.ramCost),
       );
 
       // Check if there's an entry in the map for the item's timestamp day
