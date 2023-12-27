@@ -34,7 +34,7 @@ export default function ClusterCPUUtilization(props) {
 
   const requestedCPUArray = cluster.CPU.requestedCPUArray;
   const availableCPUArray = cluster.CPU.availableCPUArray;
-  const systemReservedArray = cluster.CPU.systemReservedArray;
+  const systemReservedArray = cluster.CPU.systemReservedCPUArray;
   const totalCPUArray = cluster.CPU.totalCPUArray;
 
   var cpuRequestedData = ParseArrayIntoTimeSeriesData(requestedCPUArray);

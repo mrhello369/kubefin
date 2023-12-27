@@ -14,7 +14,6 @@ export class CPU {
     this.CPUUsage = CPUUsage;
     this.totalCPUArray = totalCPUArray;
     this.systemReservedCPUArray = systemReservedCPUArray;
-    this.systemReservedCPUArray = systemReservedCPUArray;
     this.requestedCPUArray = requestedCPUArray;
     this.availableCPUArray = availableCPUArray;
   }
