@@ -17,7 +17,7 @@ import {
 } from "../../../commons/common-components";
 import "../../../../styles/cluster-cost.scss";
 import { ClusterCostInfo } from "../model/cluster-cost";
-import { keepTwoDecimal } from "../components-common";
+import { keepThreeDecimal } from "../components-common";
 
 function CostInfo() {
   return (
@@ -84,26 +84,26 @@ export default function ClusterCostOverview(props) {
         <div id="compute-spend-container">
           <Box variant="awsui-key-label">Current month spend</Box>
           <CounterLink>
-            {clusterCostInfo.clusterCostCurrent.toFixed(2)}
+            {keepThreeDecimal(clusterCostInfo.clusterCostCurrent)}
           </CounterLink>
         </div>
 
         <div id="avg-monthly-cost-container">
           <Box variant="awsui-key-label">Monthly forecast</Box>
           <CounterLink>
-            {keepTwoDecimal(clusterCostInfo.clusterMonthEstimateCost)}
+            {keepThreeDecimal(clusterCostInfo.clusterMonthEstimateCost)}
           </CounterLink>
         </div>
         <div>
           <Box variant="awsui-key-label">Avg. daily cost</Box>
           <CounterLink>
-            {keepTwoDecimal(clusterCostInfo.clusterAvgDailyCost)}
+            {keepThreeDecimal(clusterCostInfo.clusterAvgDailyCost)}
           </CounterLink>
         </div>
         <div>
           <Box variant="awsui-key-label">Avg. daily cost per core</Box>
           <CounterLink>
-            {keepTwoDecimal(clusterCostInfo.clusterAvgHourlyCoreCost)}
+            {keepThreeDecimal(clusterCostInfo.clusterAvgHourlyCoreCost)}
           </CounterLink>
         </div>
       </ColumnLayout>

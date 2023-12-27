@@ -15,7 +15,7 @@ import {
   commonChartProps,
   barChartInstructions,
 } from "./common";
-import { dateDayFormatter, dateHourFormatter, keepTwoDecimal } from "../components-common";
+import { dateDayFormatter, dateHourFormatter, keepThreeDecimal } from "../components-common";
 
 export default function ClusterComputeCostChart(props) {
   let clusterCostInfo = props.clusterCostInfo;
@@ -48,9 +48,9 @@ export default function ClusterComputeCostChart(props) {
     nodesData.push({
       // The returned time is in seconds, we should transform it to millsecond
       date: new Date(element.timestamp * 1000),
-      ondemand: keepTwoDecimal(ondemandCost),
-      fallback: keepTwoDecimal(fallbackCost),
-      spot: keepTwoDecimal(spotCost),
+      ondemand: keepThreeDecimal(ondemandCost),
+      fallback: keepThreeDecimal(fallbackCost),
+      spot: keepThreeDecimal(spotCost),
     });
   });
 
@@ -83,16 +83,16 @@ export default function ClusterComputeCostChart(props) {
           <div>
             <Box variant="awsui-key-label">Total spend</Box>
             <CounterLink>
-              {keepTwoDecimal(totalOndemandSpend + totalFallbackSpend + totalSpotSpend)}
+              {keepThreeDecimal(totalOndemandSpend + totalFallbackSpend + totalSpotSpend)}
             </CounterLink>
           </div>
           <div>
             <Box variant="awsui-key-label">Ondemand spend</Box>
-            <CounterLink>{keepTwoDecimal(totalOndemandSpend)}</CounterLink>
+            <CounterLink>{keepThreeDecimal(totalOndemandSpend)}</CounterLink>
           </div>
           <div>
             <Box variant="awsui-key-label">Spot spend</Box>
-            <CounterLink>{keepTwoDecimal(totalSpotSpend)}</CounterLink>
+            <CounterLink>{keepThreeDecimal(totalSpotSpend)}</CounterLink>
           </div>
         </ColumnLayout>
 
