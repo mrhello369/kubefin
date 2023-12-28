@@ -124,16 +124,25 @@ func (e *EKSCloudProvider) GetNodeHourlyPrice(node *v1.Node) (*types.InstancePri
 		}
 	}
 
-	return &types.InstancePriceInfo{
+	ret := &types.InstancePriceInfo{
 		NodeTotalHourlyPrice: float64(price),
 		CPUCore:              nodePriceInfo.VCPU,
-		CPUCoreHourlyPrice:   float64(price) * e.cpuMemoryCostRatio / (e.cpuMemoryCostRatio + 1),
 		RamGiB:               nodePriceInfo.Memory,
-		RAMGiBHourlyPrice:    float64(price) / (e.cpuMemoryCostRatio + 1),
 		InstanceType:         nodeType,
 		BillingMode:          values.BillingModeOnDemand,
 		BillingPeriod:        0,
 		Region:               e.region,
 		CloudProvider:        values.CloudProviderACK,
-	}, nil
+	}
+
+	cpuCoreTotalEquivalence := nodePriceInfo.VCPU +
+		nodePriceInfo.Memory/e.cpuMemoryCostRatio
+	ramGiBTotalEquivalence := nodePriceInfo.VCPU*e.cpuMemoryCostRatio +
+		nodePriceInfo.Memory
+
+	ret.CPUCoreHourlyPrice = price / cpuCoreTotalEquivalence
+	ret.RAMGiBHourlyPrice = price / ramGiBTotalEquivalence
+	ret.GPUCardHourlyPrice = 0
+
+	return ret, nil
 }
