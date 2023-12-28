@@ -96,10 +96,9 @@ func (p *podMetricsCollector) Collect(ch chan<- prometheus.Metric) {
 			klog.Errorf("Marshal pod labels error:%v", err)
 			return
 		}
-		cost := 0.0
+		cost := utils.ParsePodResourceCost(pod, p.provider, p.nodeLister)
 		scheduled := "false"
 		if pod.Spec.NodeName != "" {
-			cost = utils.ParsePodResourceCost(pod, p.provider, p.nodeLister)
 			scheduled = "true"
 		}
 		crCareLabels := prometheus.Labels{
