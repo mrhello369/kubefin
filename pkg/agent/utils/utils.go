@@ -43,15 +43,21 @@ func ConvertQualityToGiB(value *resource.Quantity) float64 {
 }
 
 func ParsePodResourceCost(pod *v1.Pod, provider cloudprice.CloudProviderInterface, lister listercorev1.NodeLister) float64 {
-	var cpu, ram, gpu float64
-	for _, container := range pod.Spec.Containers {
-		cpu += float64(container.Resources.Requests.Cpu().MilliValue()) / values.CoreInMCore
-		ram += float64(container.Resources.Requests.Memory().Value()) / values.GBInBytes
-		gpu += float64(container.Resources.Requests.Name(values.ResourceGPU, resource.DecimalSI).Value())
+	cpu, ram, gpu := ParsePodResourceRequest(pod, pod.Spec.NodeName != "")
+
+	var cpuTotal float64
+	for _, value := range cpu {
+		cpuTotal += value
 	}
 
-	if pod.Spec.NodeName == "" {
-		return 0
+	var ramTotal float64
+	for _, value := range ram {
+		ramTotal += value
+	}
+
+	var gpuTotal float64
+	for _, value := range gpu {
+		gpuTotal += value
 	}
 
 	node, err := lister.Get(pod.Spec.NodeName)
@@ -65,9 +71,9 @@ func ParsePodResourceCost(pod *v1.Pod, provider cloudprice.CloudProviderInterfac
 		return 0
 	}
 
-	cpuCosts := cpu * priceInfo.CPUCoreHourlyPrice
-	memoryCosts := ram * priceInfo.RAMGiBHourlyPrice
-	gpuCosts := gpu * priceInfo.GPUCardHourlyPrice
+	cpuCosts := cpuTotal * priceInfo.CPUCoreHourlyPrice
+	memoryCosts := ramTotal * priceInfo.RAMGiBHourlyPrice
+	gpuCosts := gpuTotal * priceInfo.GPUCardHourlyPrice
 	return cpuCosts + memoryCosts + gpuCosts
 }
 

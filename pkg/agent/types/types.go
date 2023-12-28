@@ -17,18 +17,28 @@ limitations under the License.
 package types
 
 type InstancePriceInfo struct {
+	// NodeTotalHourlyPrice represents the total cost of the node in one hour
 	NodeTotalHourlyPrice float64
-	CPUCore              float64
-	CPUCoreHourlyPrice   float64
-	RamGiB               float64
-	RAMGiBHourlyPrice    float64
-	GPUCards             float64
-	GPUCardHourlyPrice   float64
-	InstanceType         string
-	BillingMode          string
-
-	// Only need for monthly/yearly billing mode
+	// CPUCore represents the total cpu cores of the node
+	CPUCore float64
+	// CPUCoreHourlyPrice represents the one core hourly cost of the node
+	CPUCoreHourlyPrice float64
+	// RamGiB represents the total memory GiB of the node
+	RamGiB float64
+	// RAMGiBHourlyPrice represents the one GiB hourly cost of the node
+	RAMGiBHourlyPrice float64
+	// GPUCards represents the total GPU cards of the node
+	GPUCards float64
+	// GPUCardHourlyPrice represents the one GPU card hourly cost of the node
+	GPUCardHourlyPrice float64
+	// InstanceType represents the type of the node, such as t3.2xlarge
+	InstanceType string
+	// InstanceType represents the billing mode of the node, such as OnDemand
+	BillingMode string
+	// BillingPeriod only needs for monthly/yearly billing mode
 	BillingPeriod int
-	Region        string
+	// Region represents the node's region
+	Region string
+	// CloudProvider represents the node's cloud provider
 	CloudProvider string
 }
