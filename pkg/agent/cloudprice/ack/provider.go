@@ -168,7 +168,7 @@ func (a *ACKCloudProvider) GetNodeHourlyPrice(node *v1.Node) (*types.InstancePri
 	ret := &types.InstancePriceInfo{
 		NodeTotalHourlyPrice: nodeSpec.Price,
 		CPUCore:              nodeSpec.CPUCount,
-		RamGiB:               nodeSpec.RAMGBCount,
+		RamGiB:               nodeSpec.RAMGiBCount,
 		GPUCards:             nodeSpec.GPUAmount,
 		InstanceType:         nodeType,
 		BillingMode:          values.BillingModeOnDemand,
@@ -178,11 +178,11 @@ func (a *ACKCloudProvider) GetNodeHourlyPrice(node *v1.Node) (*types.InstancePri
 	}
 
 	cpuCoreTotalEquivalence := nodeSpec.CPUCount +
-		nodeSpec.RAMGBCount/a.cpuMemoryCostRatio + nodeSpec.GPUAmount*a.gpuCpuCostRatio
-	ramGiBTotalEquivalence := nodeSpec.RAMGBCount +
+		nodeSpec.RAMGiBCount/a.cpuMemoryCostRatio + nodeSpec.GPUAmount*a.gpuCpuCostRatio
+	ramGiBTotalEquivalence := nodeSpec.RAMGiBCount +
 		nodeSpec.CPUCount*a.cpuMemoryCostRatio + nodeSpec.GPUAmount*a.gpuCpuCostRatio*a.cpuMemoryCostRatio
 	gpuCardsTotalEquivalence := nodeSpec.GPUAmount +
-		nodeSpec.CPUCount/a.gpuCpuCostRatio + nodeSpec.RAMGBCount/(a.gpuCpuCostRatio*a.gpuCpuCostRatio)
+		nodeSpec.CPUCount/a.gpuCpuCostRatio + nodeSpec.RAMGiBCount/(a.gpuCpuCostRatio*a.gpuCpuCostRatio)
 
 	ret.CPUCoreHourlyPrice = nodeSpec.Price / cpuCoreTotalEquivalence
 	ret.RAMGiBHourlyPrice = nodeSpec.Price / ramGiBTotalEquivalence
@@ -266,9 +266,9 @@ func queryNodeSpecFromCloud() (map[string]cloudpriceapis.NodeSpec, error) {
 				return nil, err
 			}
 			ret[nodeType] = cloudpriceapis.NodeSpec{
-				CPUCount:   cpuCount,
-				RAMGBCount: memoryCount,
-				GPUAmount:  gpuAmount,
+				CPUCount:    cpuCount,
+				RAMGiBCount: memoryCount,
+				GPUAmount:   gpuAmount,
 			}
 		}
 	}
