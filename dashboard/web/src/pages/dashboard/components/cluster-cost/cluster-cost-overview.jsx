@@ -103,7 +103,7 @@ export default function ClusterCostOverview(props) {
         <div>
           <Box variant="awsui-key-label">Avg. daily cost per core</Box>
           <CounterLink>
-            {keepThreeDecimal(clusterCostInfo.clusterAvgHourlyCoreCost)}
+            {keepThreeDecimal(clusterCostInfo.clusterAvgHourlyCoreCost) * 24}
           </CounterLink>
         </div>
       </ColumnLayout>
