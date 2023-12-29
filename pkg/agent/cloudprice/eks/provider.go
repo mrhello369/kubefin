@@ -42,6 +42,7 @@ type EKSCloudProvider struct {
 	awsPricingClient *awspricing.AWSEC2PriceClient
 
 	cpuMemoryCostRatio float64
+	gpuCpuCostRatio    float64
 	region             string
 }
 
@@ -76,10 +77,18 @@ func NewEKSCloudProvider(client kubernetes.Interface, agentOptions *options.Agen
 			return nil, err
 		}
 	}
+	gpuCpuCostRatio := cloudpriceapis.DefaultGPUCPUCostRatio
+	if agentOptions.GPUCPUCostRatio != "" {
+		gpuCpuCostRatio, err = strconv.ParseFloat(agentOptions.GPUCPUCostRatio, 64)
+		if err != nil {
+			return nil, err
+		}
+	}
 	eksCloud := EKSCloudProvider{
 		client:             client,
 		awsPricingClient:   awsPricingClient,
 		cpuMemoryCostRatio: cpuMemoryCostRatio,
+		gpuCpuCostRatio:    gpuCpuCostRatio,
 		region:             region,
 	}
 
@@ -128,21 +137,34 @@ func (e *EKSCloudProvider) GetNodeHourlyPrice(node *v1.Node) (*types.InstancePri
 		NodeTotalHourlyPrice: float64(price),
 		CPUCore:              nodePriceInfo.VCPU,
 		RamGiB:               nodePriceInfo.Memory,
+		GPUCards:             nodePriceInfo.GPU,
 		InstanceType:         nodeType,
 		BillingMode:          values.BillingModeOnDemand,
 		BillingPeriod:        0,
 		Region:               e.region,
-		CloudProvider:        values.CloudProviderACK,
+		CloudProvider:        values.CloudProviderEKS,
 	}
 
-	cpuCoreTotalEquivalence := nodePriceInfo.VCPU +
-		nodePriceInfo.Memory/e.cpuMemoryCostRatio
-	ramGiBTotalEquivalence := nodePriceInfo.VCPU*e.cpuMemoryCostRatio +
-		nodePriceInfo.Memory
+	var cpuCoreTotalEquivalence, ramGiBTotalEquivalence, gpuCardsTotalEquivalence float64
 
+	if ret.GPUCards == 0 {
+		cpuCoreTotalEquivalence = nodePriceInfo.VCPU + nodePriceInfo.Memory/e.cpuMemoryCostRatio
+		ramGiBTotalEquivalence = nodePriceInfo.Memory + nodePriceInfo.VCPU*e.cpuMemoryCostRatio
+		ret.CPUCoreHourlyPrice = price / cpuCoreTotalEquivalence
+		ret.RAMGiBHourlyPrice = price / ramGiBTotalEquivalence
+		ret.GPUCardHourlyPrice = 0
+		return ret, nil
+	}
+
+	cpuCoreTotalEquivalence = nodePriceInfo.VCPU + nodePriceInfo.Memory/e.cpuMemoryCostRatio +
+		nodePriceInfo.GPU*e.gpuCpuCostRatio
+	ramGiBTotalEquivalence = nodePriceInfo.Memory + nodePriceInfo.VCPU*e.cpuMemoryCostRatio +
+		nodePriceInfo.GPU*e.gpuCpuCostRatio*e.cpuMemoryCostRatio
+	gpuCardsTotalEquivalence = nodePriceInfo.GPU +
+		nodePriceInfo.VCPU/e.gpuCpuCostRatio + nodePriceInfo.Memory/(e.gpuCpuCostRatio*e.cpuMemoryCostRatio)
 	ret.CPUCoreHourlyPrice = price / cpuCoreTotalEquivalence
 	ret.RAMGiBHourlyPrice = price / ramGiBTotalEquivalence
-	ret.GPUCardHourlyPrice = 0
+	ret.GPUCardHourlyPrice = price / gpuCardsTotalEquivalence
 
 	return ret, nil
 }
