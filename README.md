@@ -16,7 +16,9 @@ KubeFin is a platform built on Kubernetes that enables you to efficiently gain i
 
 Currently, the cost insights feature is supported, optimization will be available soon.
 
-<img src="./docs/resources/kubefin-architecture.png" width="100%">
+<p align="center">
+  <img src="./docs/resources/kubefin-architecture.png" width="85%">
+</p>
 
 ## Highlights
 
@@ -26,7 +28,9 @@ Taking care of the cost management for the entire public cloud clusters lifecycl
 
 Easily view the cost overview of multiple clusters from different clouds in one page. Additionally, KubeFin allows you to dive deeper into the cost details of each cluster by analyzing various dimensions such as nodes, workloads, namespaces and etc.
 
-<img src="./docs/resources/cost-insights-all-clusters.png" width="45%"> <img src="./docs/resources/cost-insights-single-cluster.png" width="45%">
+<p align="center">
+  <img src="./docs/resources/cost-insights-all-clusters.png" width="45%"> <img src="./docs/resources/cost-insights-single-cluster.png" width="45%">
+</p>
 
 ### Optimize Cost automatically(Available soon)
 
@@ -38,17 +42,28 @@ KubeFin will continuously profile and categorize workloads within the cluster in
 
 ## Getting Started
 
-Before installing KubeFin, please ensure that the metrics-server is running. If it is not, please execute the following command:
+### Prerequisites
+
+Before installing KubeFin, please ensure the metrics API is functioning properly. If it is not, you can execute the following command to install the metrics server:
 ```sh
 kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
 ```
 
-To install the latest KubeFin release in primary cluster from the official manifest, execute the following command.
-```shell
-kubectl apply -f https://github.com/kubefin/kubefin/releases/latest/download/kubefin.yaml
-```
+### Install KubeFin
 
-Once your KubeFin has been installed, wait for the pod to be ready and port forward with:
+1. Install the required custom resources by running the command:
+  ```sh
+  kubectl apply -f https://github.com/kubefin/kubefin/releases/latest/download/kubefin-crd.yaml
+  ```
+
+2. Install the components of KubeFin by running the command:
+  ```sh
+  kubectl apply -f https://github.com/kubefin/kubefin/releases/latest/download/kubefin-primary.yaml
+  ```
+
+### Access the KubeFin Dashboard
+
+After installing KubeFin, wait for the pod to be ready, then establish a port-forwarding session with the following command:
 ```shell
 kubectl port-forward -nkubefin-system svc/kubefin-cost-analyzer-service --address='0.0.0.0' 8080 3000
 ```
