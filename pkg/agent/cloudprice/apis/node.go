@@ -22,8 +22,12 @@ const (
 )
 
 type NodeSpec struct {
-	CPUCount   float64
-	RAMGBCount float64
-	GPUAmount  float64
-	Price      float64
+	// CPUCount represents the total cpu cores of the node
+	CPUCount float64
+	// RAMGiBCount represents the total memory GiB of the node
+	RAMGiBCount float64
+	// GPUCount represents the total gpu cores of the node
+	GPUAmount float64
+	// Price represents the hourly price of the node, such as 3$/hour
+	Price float64
 }
